@@ -191,5 +191,19 @@ export default {
     privacy: "Telemetri yok. Steam şifren bu bilgisayardan yalnızca Steam'e gider.",
     repo: "GitHub'da ArchiSteamFarm",
     engine: "Motor sürümü: {v}",
+    licenses: "Lisanslar",
+    version: "SCMFARM sürümü: {v}",
+  },
+  update: {
+    title: "SCMFARM {v} sürümüne güncelleniyor",
+    lead: "Yeni sürüm indiriliyor. Bitince program kendiliğinden yeniden başlar.",
+    failed: "Güncelleme bu sefer olmadı. Mevcut sürüm başlatılıyor.",
+    locked: "Programın klasörü yazmaya karşı korumalı, bu yüzden kendini güncelleyemiyor. Yeni sürümü showcasemaker.com'dan indir.",
+  },
+  remove: {
+    button: "SCMFARM'ı bu bilgisayardan kaldır",
+    title: "SCMFARM bu bilgisayardan kaldırılsın mı?",
+    text: "Kart toplama durur. Motor, Steam girişi, ayarlar, otomatik başlatma kaydı ve programın dosyası silinir. Steam hesabın ve kartların olduğu gibi kalır.",
+    yes: "Kaldır",
   },
 };

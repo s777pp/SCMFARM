@@ -191,5 +191,19 @@ export default {
     privacy: "Aucune télémétrie. Votre mot de passe Steam ne quitte ce PC que vers Steam.",
     repo: "ArchiSteamFarm sur GitHub",
     engine: "Version du moteur : {v}",
+    licenses: "Licences",
+    version: "Version de SCMFARM : {v}",
+  },
+  update: {
+    title: "Mise à jour de SCMFARM vers la version {v}",
+    lead: "Téléchargement de la nouvelle version. Le programme redémarre tout seul à la fin.",
+    failed: "La mise à jour n'a pas abouti cette fois. Lancement de la version actuelle.",
+    locked: "Le dossier du programme est protégé en écriture, il ne peut donc pas se mettre à jour. Téléchargez la nouvelle version sur showcasemaker.com.",
+  },
+  remove: {
+    button: "Supprimer SCMFARM de ce PC",
+    title: "Supprimer SCMFARM de ce PC ?",
+    text: "Le farm s'arrête. Le moteur, la connexion Steam, les paramètres, le démarrage automatique et le fichier du programme sont supprimés. Votre compte Steam et vos cartes restent tels quels.",
+    yes: "Supprimer",
   },
 };

@@ -657,6 +657,8 @@ document.addEventListener("click", async (e) => {
     render();
   } else if (a === "engine-retry") bootEngine().catch(() => {});
   else if (a === "logout") logout();
+  else if (a === "open-licenses") api.openLicenses().catch(console.warn);
+  else if (a === "remove-pc") removeFromPc();
   else if (a === "pause") { await pauseFarming(); pollOnce(); }
   else if (a === "resume") { await resumeFarming(); pollOnce(); }
   else if (a === "stop") { await stopBot(); pollOnce(); }
@@ -788,12 +790,51 @@ async function persistStep() {
   }
 }
 
+// ------------------------------------------------------------------ self-update (portable exe)
+// At start: when showcasemaker.com lists a newer SCMFARM, download it (Rust checks the checksum and the release
+// signature), and the app restarts into it. Offline or no release yet: nothing happens.
+async function updateAtStart() {
+  const r = await api.updateCheck().catch(() => null);
+  state.appVersion = r?.current || "";
+  $("#aboutVersion").textContent = state.appVersion ? t("about.version", { v: state.appVersion }) : "";
+  if (!r?.available) return;
+  const box = $("#updating");
+  const pct = (p) => {
+    const v = p.total ? Math.min(100, Math.round((p.done / p.total) * 100)) : 0;
+    $("#updBar").style.width = `${Math.max(3, v)}%`;
+    $(".upd__pct", box).textContent = `${v}%`;
+  };
+  $(".upd__title", box).textContent = t("update.title", { v: r.latest });
+  $(".upd__lead", box).textContent = t("update.lead");
+  pct({ done: 0, total: 0 });
+  box.hidden = false;
+  try {
+    await api.updateInstall(pct);
+    await new Promise(() => {}); // the app is restarting
+  } catch (e) {
+    console.warn("update", e);
+    $(".upd__lead", box).textContent = t(String(e) === "folder_not_writable" ? "update.locked" : "update.failed");
+    $(".upd__pct", box).textContent = "";
+    await new Promise((r2) => setTimeout(r2, 3500));
+    box.hidden = true;
+  }
+}
+
+async function removeFromPc() {
+  $("#about").close();
+  if (!(await ask(t("remove.title"), t("remove.text"), t("remove.yes")))) return;
+  clearInterval(pollTimer);
+  signIn.cancel();
+  await api.removeFromPc(true);
+}
+
 // ------------------------------------------------------------------ boot
 (async function main() {
   state.settings = await api.settingsGet();
   setLang(detectLang(S().lang));
   if (S().wizardDone) state.mode = "dash";
   render();
+  await updateAtStart(); // returns when there is nothing to install or the update failed
   try {
     await bootEngine();
     if (state.mode === "dash") startPolling();

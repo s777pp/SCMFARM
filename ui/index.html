@@ -36,6 +36,16 @@
       </div>
     </header>
     <main id="view"></main>
+    <!-- Shown at start while a newer SCMFARM is downloaded; the app then restarts into it. -->
+    <section class="upd" id="updating" hidden>
+      <div class="upd__card">
+        <img src="img/logo.png" alt="">
+        <h2 class="upd__title"></h2>
+        <p class="upd__lead"></p>
+        <div class="bar"><i id="updBar"></i></div>
+        <p class="upd__pct"></p>
+      </div>
+    </section>
     <footer class="foot">
       <button class="link link--about" id="btnAbout"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span data-i18n="app.about"></span></button>
       <span class="foot__sep">·</span>
@@ -61,8 +71,13 @@
     <p data-i18n="about.body"></p>
     <p data-i18n="about.license"></p>
     <p data-i18n="about.privacy"></p>
+    <p id="aboutVersion"></p>
     <p id="aboutEngine"></p>
     <p><button class="link" data-href="https://github.com/JustArchiNET/ArchiSteamFarm" data-i18n="about.repo"></button></p>
+    <div class="about__actions">
+      <button class="btn btn--sm" type="button" data-action="open-licenses" data-i18n="about.licenses"></button>
+      <button class="btn btn--sm btn--danger" type="button" data-action="remove-pc" data-i18n="remove.button"></button>
+    </div>
     <form method="dialog"><button class="btn" data-i18n="app.close"></button></form>
   </dialog>
 </body>

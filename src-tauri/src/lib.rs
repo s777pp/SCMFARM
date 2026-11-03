@@ -1,5 +1,7 @@
 mod engine;
 mod settings;
+mod system;
+mod updater;
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -14,6 +16,8 @@ fn show_main(app: &AppHandle) {
 }
 
 pub fn run() {
+    // After a self-update: wait for the old process to go away before the single-instance check.
+    updater::finish_previous_update();
     let app = tauri::Builder::default()
         // A second launch (e.g. from the Start menu while we sit in the tray) just shows the window.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_main(app)))
@@ -78,6 +82,10 @@ pub fn run() {
             settings::settings_set,
             settings::set_autostart,
             settings::open_external,
+            system::open_licenses,
+            system::remove_from_pc,
+            updater::update_check,
+            updater::update_install,
         ])
         .build(tauri::generate_context!())
         .expect("error while building SCMFARM");

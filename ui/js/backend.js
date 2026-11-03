@@ -25,6 +25,17 @@ function realBackend() {
     settingsSet: (patch) => invoke("settings_set", { patch }),
     setAutostart: (enabled) => invoke("set_autostart", { enabled }),
     openExternal: (url) => invoke("open_external", { url }),
+    updateCheck: () => invoke("update_check"),
+    async updateInstall(onProgress) {
+      const unlisten = await tauri.event.listen("update-progress", (e) => onProgress(e.payload));
+      try {
+        await invoke("update_install"); // on success the app exits and restarts into the new version
+      } finally {
+        unlisten();
+      }
+    },
+    openLicenses: () => invoke("open_licenses"),
+    removeFromPc: (deleteExe) => invoke("remove_from_pc", { deleteExe: !!deleteExe }),
   };
 }
 
@@ -183,6 +194,23 @@ function mockBackend() {
     async setAutostart() {},
     async openExternal(url) {
       window.open(url, "_blank", "noopener");
+    },
+    // ?update=1 in the preview URL shows the update screen (it "fails" at the end, the demo cannot restart).
+    async updateCheck() {
+      const demo = new URLSearchParams(location.search).has("update");
+      return { current: "0.1.0", latest: demo ? "0.2.0" : "0.1.0", available: demo };
+    },
+    async updateInstall(onProgress) {
+      const total = 13000000;
+      for (let done = 0; done <= total; done += total / 10) {
+        onProgress({ done, total });
+        await sleep(150);
+      }
+      throw "demo";
+    },
+    async openLicenses() {},
+    async removeFromPc() {
+      log.push("demo: remove from PC");
     },
   };
 }

@@ -337,6 +337,16 @@ dialog{max-width:560px;padding:28px 30px;border:1px solid var(--ui-line);border-
 dialog::backdrop{background:rgba(2,5,14,.7);backdrop-filter:blur(3px)}
 dialog p{margin-top:12px;color:var(--ui-muted);line-height:1.6}
 dialog .btn{margin-top:22px}
+.about__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.about__actions .btn{margin-top:0}
+/* update screen at start */
+.upd{position:fixed;inset:52px 0 32px;z-index:30;display:grid;place-items:center;background:rgba(3,7,18,.92)}
+.upd__card{width:min(440px,90vw);padding:30px 32px;border:1px solid var(--ui-line-hi);border-radius:var(--ui-r-2xl);background:var(--ui-pop);box-shadow:var(--ui-shadow-md);text-align:center}
+.upd__card img{width:56px;height:56px;border-radius:14px}
+.upd__title{margin-top:14px;font-size:20px;font-weight:900;color:#fff}
+.upd__lead{margin-top:8px;color:var(--ui-muted)}
+.upd__card .bar{margin-top:20px}
+.upd__pct{margin-top:8px;font-weight:800;color:var(--ui-cyan-hi)}
 .ask{width:440px}
 .ask__title{font-size:19px;font-weight:800;color:#fff;line-height:1.3}
 .ask__text{margin-top:10px}

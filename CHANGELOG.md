@@ -5,6 +5,18 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 
 ## Unreleased (0.1.0 prototype) — 2026-11-03
 
+### Changed (distribution)
+- **One portable `SCMFARM.exe`, no installer** (`bundle.active: false`). Licences are built into the exe
+  (About → Licences writes and opens them), **About → Remove SCMFARM from this PC** uninstalls everything
+  (engine, Steam token, settings, autostart, WebView profile, the exe itself).
+- **Signed self-update** (`src-tauri/src/updater.rs`): at start the app asks showcasemaker.com
+  (`/api/scmfarm/latest`); a newer version is downloaded, checked (SHA-256 + ed25519 signature over
+  "SCMFARM <version> <sha256>"), swapped in and restarted. Release key: public half in the code, private half
+  only in the GitHub secret `RELEASE_KEY`. Rust tests check the signature format against the CI script.
+- CI builds the exe, runs the Rust tests, and on a `v*` tag publishes a GitHub release with `SCMFARM.exe` and
+  `latest.json` (`scripts/sign-release.mjs`). The SignPath step is ready in the workflow, commented out until the
+  project is accepted.
+
 ### Added (languages)
 - **All eight languages of showcasemaker.com**: German, Turkish, French, Ukrainian, Spanish and Portuguese join
   English and Russian (`ui/js/locales/*.js`, 174 texts each, same placeholders; Steam's own names such as

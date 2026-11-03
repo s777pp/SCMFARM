@@ -35,7 +35,7 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 | `src-tauri/src/engine.rs` | Download/verify/unpack ASF, start/stop it, IPC proxy, log tail |
 | `src-tauri/src/settings.rs` | App settings file, autostart, opening links |
 | `src-tauri/src/lib.rs` | Tray icon, close-to-tray, single instance, cleanup on exit |
-| `licenses/` | ArchiSteamFarm licence (Apache-2.0), Montserrat font licence (OFL) — shipped inside the installer |
+| `licenses/` | ArchiSteamFarm licence (Apache-2.0), Montserrat font licence (OFL), qrcode-generator (MIT) — built into the exe (`src-tauri/src/system.rs`), About → Licences writes them out |
 | `scripts/preview.mjs` | Serves `ui/` for a browser preview in demo mode |
 
 ## Build on Windows
@@ -61,13 +61,14 @@ npm run dev
 `npm run dev` compiles the Rust side (the first build takes a few minutes) and opens the app window.
 The first run downloads ASF (~20 MB) into `%APPDATA%\com.showcasemaker.farm\asf`.
 
-Installer:
+Release exe:
 
 ```bash
 npm run build
 ```
 
-The NSIS installer lands in `src-tauri/target/release/bundle/nsis/`.
+The program is one portable file, `src-tauri/target/release/SCMFARM.exe` (no installer; `bundle.active` is
+false). Close a running SCMFARM first, the build replaces that file.
 
 ### UI only (no Rust, no Steam)
 
@@ -87,21 +88,36 @@ so users stay signed in. Read the ASF changelog for IPC changes first.
 
 ## Continuous integration
 
-[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml) builds the NSIS installer on a
-GitHub-hosted Windows runner for every push to `main`, every pull request and every `v*` tag, and uploads it as
-a workflow artifact. Release binaries are only ever taken from these CI runs, never from a developer's PC.
+[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml) builds `SCMFARM.exe` on a
+GitHub-hosted Windows runner for every push to `main`, every pull request and every `v*` tag, runs the Rust tests
+and uploads the exe as a workflow artifact. Release binaries are only ever taken from these CI runs, never from a developer's PC.
 `scripts/check-version.mjs` runs first and fails the build if `package.json`, `src-tauri/tauri.conf.json`,
 `src-tauri/Cargo.toml` and the release tag disagree on the version, or if the product name is not
 "SCMFARM". Commit `src-tauri/Cargo.lock` after the first build so CI builds are reproducible.
 
-To release: bump the version in all three files, commit, tag `vX.Y.Z`, push the tag.
+To release: bump the version in all three files, commit, tag `vX.Y.Z`, push the tag. The tag build publishes a
+GitHub release with `SCMFARM.exe` and `latest.json`.
+
+## Releases and self-update
+
+* `latest.json` (from `scripts/sign-release.mjs` in CI): version, size, SHA-256 of the exe and an ed25519
+  signature over `SCMFARM <version> <sha256>`. The private key is the GitHub secret `RELEASE_KEY` (the owner keeps
+  an offline copy); the public key is `RELEASE_PUBLIC_KEY` in `src-tauri/src/updater.rs`.
+* showcasemaker.com mirrors the newest GitHub release: `/api/scmfarm/latest` serves the manifest with a download
+  URL on the site, `/download/scmfarm` serves the exe (cached on the VPS, GitHub as fallback).
+* On start the app asks `/api/scmfarm/latest`. A newer version is downloaded next to the running exe, checked
+  (SHA-256 + signature), swapped in (`SCMFARM.exe` → `SCMFARM.exe.old`, new file in place) and started; the new
+  process deletes the old file once the old one has exited. Offline or no release: the app just starts.
+  Dev builds (`npm run dev`) never update themselves.
 
 ## Install and uninstall
 
-The installer is a per-user NSIS installer (no admin rights needed). It registers a normal uninstaller in
-Windows "Apps & features". The uninstaller removes the program and offers to delete the app data folder
-(`%APPDATA%\com.showcasemaker.farm`: settings, the downloaded ASF engine and the Steam login token).
-Quit the app from the tray first so the engine is stopped.
+Nothing to install: download `SCMFARM.exe` and run it (no admin rights). It keeps its data in
+`%APPDATA%\com.showcasemaker.farm` (settings, the downloaded ASF engine, the Steam login token) and the window's
+WebView profile in `%LOCALAPPDATA%\com.showcasemaker.farm`. "Start with Windows" adds a normal autostart entry.
+
+To uninstall: About → **Remove SCMFARM from this PC**. It stops the engine, removes the autostart entry, deletes
+both folders and the exe itself, then quits.
 
 ## Privacy
 
@@ -111,7 +127,9 @@ Quit the app from the tray first so the engine is stopped.
   (127.0.0.1). The password is never written to disk and never sent to showcasemaker.com or anyone else.
   Steam's login token stays in the app data folder on the user's PC.
 * Network connections the app makes: Steam (by ASF, for signing in and farming), GitHub (one-time download
-  of the pinned ASF release), Steam's image CDN (game pictures and the avatar on the dashboard).
+  of the pinned ASF release), Steam's image CDN (game pictures and the avatar on the dashboard), and
+  showcasemaker.com once per start to check for a newer SCMFARM (only the version check and the download; no
+  account data, no identifiers).
   The "showcasemaker.com" button only opens the site in the user's browser.
 * ASF's optional remote features (joining its Steam group, public trade listing, self-update, bad-bot list)
   are switched off by the app.
@@ -120,9 +138,9 @@ Quit the app from the tray first so the engine is stopped.
 
 Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
-*(Signing is planned for the first public release; until then installers from CI are unsigned.)*
+*(Signing is planned for the first public release; until then the exe from CI is unsigned.)*
 
-* Only installers built by the GitHub Actions workflow in this repository from a tagged commit are signed.
+* Only `SCMFARM.exe` files built by the GitHub Actions workflow in this repository from a tagged commit are signed.
 * Every component is open source under an OSI-approved licence: SCMFARM (Apache-2.0), ArchiSteamFarm
   (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1), qrcode-generator (MIT).
   There are no proprietary parts and no commercial dual licensing.
@@ -139,12 +157,12 @@ The privacy statement for signed releases is the [Privacy](#privacy) section abo
 
 ## Roadmap
 
-* **Stage 1 (this prototype):** wizard, one account, dashboard, tray, autostart, RU/EN.
-* **Stage 2:** several Steam accounts, the remaining six languages (de, tr, fr, uk, es, pt), QR re-login from the dashboard, "approve in the
-  Steam app" sign-in, a Windows job object so the engine always exits with the app.
-* **Stage 3:** first public release from CI, code signing via SignPath Foundation (apply after the first
-  public release, then add the SignPath GitHub Action to the workflow), auto-update, download page on
-  showcasemaker.com.
+* **Done:** wizard, one account, dashboard, tray, autostart, eight languages, own title bar, log out,
+  portable exe with signed self-update, download page on showcasemaker.com.
+* **Next:** first public release from CI, then code signing via SignPath Foundation (apply after that release,
+  then enable the SignPath step in the workflow).
+* **Later:** several Steam accounts, QR re-login from the dashboard, "approve in the Steam app" sign-in, a Windows
+  job object so the engine always exits with the app.
 
 ## Licences
 
