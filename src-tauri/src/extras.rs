@@ -2,7 +2,10 @@
 //! - Windows notifications (local, no network);
 //! - the user's own Telegram bot (token from @BotFather): messages go straight from this PC to api.telegram.org;
 //! - the showcasemaker.com feed: Steam sale dates and card set sizes/prices, the same JSON for everyone, fetched at
-//!   most once a day and cached in the app data folder. Nothing about the user is sent.
+//!   most once a day and cached in the app data folder. Nothing about the user is sent;
+//! - card sets of the user's own games (`card_set`): the Steam Community Market search for one game's normal cards,
+//!   1-2 requests, from this PC like a person opening the market page, cached a day in the app data folder. The
+//!   "sets close to a badge" panel needs set sizes and prices even when the feed has none.
 
 use std::fs;
 use std::path::PathBuf;
@@ -15,6 +18,8 @@ use tauri_plugin_notification::NotificationExt;
 const FEED_URL: &str = "https://showcasemaker.com/api/scmfarm/feed";
 const FEED_MAX_AGE: Duration = Duration::from_secs(24 * 3600);
 const TELEGRAM: &str = "https://api.telegram.org";
+const MARKET: &str = "https://steamcommunity.com/market/search/render/";
+const SET_MAX_AGE: u64 = 24 * 3600;
 
 fn client(timeout: u64) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
@@ -132,6 +137,79 @@ pub async fn feed_get(app: AppHandle) -> Option<Value> {
     }
 }
 
+fn now_secs() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
+
+/// One market answer for one game: (cards in the set = total_count, sum of the cheapest listings in cents of the
+/// rows on this page, game name from "<Game> Trading Card").
+fn parse_set_page(v: &Value, appid: u32) -> Option<(u64, u64, String)> {
+    if v["success"] != true {
+        return None;
+    }
+    let prefix = format!("{appid}-");
+    let mut cents = 0;
+    let mut name = String::new();
+    for row in v["results"].as_array()? {
+        if !row["hash_name"].as_str().unwrap_or("").starts_with(&prefix) {
+            continue;
+        }
+        cents += row["sell_price"].as_u64().unwrap_or(0);
+        if name.is_empty() {
+            name = row["asset_description"]["type"].as_str().unwrap_or("").trim_end_matches(" Trading Card").to_string();
+        }
+    }
+    Some((v["total_count"].as_u64().unwrap_or(0), cents, name))
+}
+
+/// Size and price of one game's normal card set: {cards, cents, name}. Cached a day in `card_sets.json`;
+/// Err("rate") when Steam asks to slow down (the UI then stops asking for today).
+#[tauri::command]
+pub async fn card_set(app: AppHandle, appid: u32) -> Result<Value, String> {
+    let path = app.path().app_data_dir().map_err(|e| e.to_string())?.join("card_sets.json");
+    let mut cache: Value = fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_else(|| json!({}));
+    let key = appid.to_string();
+    if let Some(hit) = cache.get(&key) {
+        if now_secs().saturating_sub(hit["at"].as_u64().unwrap_or(0)) < SET_MAX_AGE {
+            return Ok(hit.clone());
+        }
+    }
+    let http = client(20)?;
+    let (mut cards, mut cents, mut name, mut start) = (0u64, 0u64, String::new(), 0u64);
+    loop {
+        let start_s = start.to_string();
+        let game = format!("tag_app_{appid}");
+        let query = [
+            ("norender", "1"), ("appid", "753"), ("count", "10"), ("start", start_s.as_str()),
+            ("sort_column", "price"), ("sort_dir", "asc"), ("category_753_Game[]", game.as_str()),
+            ("category_753_item_class[]", "tag_item_class_2"), ("category_753_cardborder[]", "tag_cardborder_0"),
+        ];
+        let r = http.get(MARKET).query(&query).send().await.map_err(|_| "offline".to_string())?;
+        if r.status().as_u16() == 429 {
+            return Err("rate".into());
+        }
+        let v: Value = r.json().await.map_err(|_| "steam".to_string())?;
+        let (total, page_cents, page_name) = parse_set_page(&v, appid).ok_or("steam")?;
+        cards = total;
+        cents += page_cents;
+        if name.is_empty() {
+            name = page_name;
+        }
+        start += 10;
+        if start >= total || start >= 30 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_secs(2)).await;
+    }
+    let entry = json!({ "cards": cards, "cents": cents, "name": name, "at": now_secs() });
+    cache[key] = entry.clone();
+    if let Some(dir) = path.parent() {
+        let _ = fs::create_dir_all(dir);
+    }
+    let _ = fs::write(&path, serde_json::to_vec(&cache).unwrap_or_default());
+    Ok(entry)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,6 +233,17 @@ mod tests {
         ]});
         assert_eq!(chat_from_updates(&v), Some(4242));
         assert_eq!(chat_from_updates(&json!({"ok": true, "result": []})), None);
+    }
+
+    #[test]
+    fn set_page() {
+        let v = json!({"success": true, "total_count": 12, "results": [
+            {"hash_name": "620-Atlas", "sell_price": 5, "asset_description": {"type": "Portal 2 Trading Card"}},
+            {"hash_name": "620-P-Body", "sell_price": 7},
+            {"hash_name": "999-Other", "sell_price": 100},
+        ]});
+        assert_eq!(parse_set_page(&v, 620), Some((12, 12, "Portal 2".to_string())));
+        assert_eq!(parse_set_page(&json!({"success": false}), 620), None);
     }
 
     #[test]

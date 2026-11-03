@@ -131,7 +131,8 @@ both folders and the exe itself, then quits.
   (127.0.0.1). The password is never written to disk and never sent to showcasemaker.com or anyone else.
   Steam's login token stays in the app data folder on the user's PC.
 * Network connections the app makes:
-  * Steam (by ASF, for signing in, farming and reading the account's own inventory for the sets panel);
+  * Steam (by ASF, for signing in, farming and reading the account's own inventory for the sets panel; and by the
+    app, the Community Market search for the card sets of games in that inventory, a few requests a day, cached);
   * GitHub (one-time download of the pinned ASF release);
   * Steam's image CDN (game pictures and avatars on the dashboard);
   * showcasemaker.com, only with the matching switch on (Settings → Options, both on by default and explained there):

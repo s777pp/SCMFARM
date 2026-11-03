@@ -27,6 +27,7 @@ const state = {
   seen: {}, // bot -> { status, input } from the previous poll, for notifications
   cards: {}, // bot -> { at, games, err } (inventory for the sets panel)
   feed: null, // showcasemaker.com feed: sales + set sizes/prices (null when off or offline)
+  localSets: {}, // appid -> [cards in set, set price in cents], asked from the Steam market by this app
   dashInputError: null,
   accountOpen: null, // bot whose account menu is open
 };
@@ -754,7 +755,7 @@ async function loadFeed() {
 let setsLoading = null;
 function loadSets(bot, force) {
   const c = state.cards[bot];
-  if (!state.feed || setsLoading || (!force && c && Date.now() - c.at < SETS_EVERY)) return;
+  if (setsLoading || (!force && c && Date.now() - c.at < SETS_EVERY)) return;
   if (!botOf(bot)?.IsConnectedAndLoggedOn) return;
   setsLoading = (async () => {
     try {
@@ -766,8 +767,36 @@ function loadSets(bot, force) {
       setsLoading = null;
     }
     if (cur()?.bot === bot) updateSets();
+    lookUpSets(bot);
   })();
 }
+
+// Set sizes and prices of the account's own games: asked from the Steam market on this PC, one game every few
+// seconds, at most SET_LOOKUPS per run (Rust caches each answer a day). Steam asking to slow down stops it for now.
+const SET_LOOKUPS = 40;
+let setsLookup = null;
+function lookUpSets(bot) {
+  const games = state.cards[bot]?.games;
+  if (setsLookup || !games) return;
+  const todo = Object.keys(games).filter((id) => !state.localSets[id]).slice(0, SET_LOOKUPS);
+  if (!todo.length) return;
+  setsLookup = (async () => {
+    for (const id of todo) {
+      try {
+        const s = await api.cardSet(Number(id));
+        if (s?.cards) state.localSets[id] = [s.cards, s.cents || 0];
+      } catch (e) {
+        if (String(e) === "rate") break;
+      }
+      if (cur()?.bot === bot) updateSets();
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    setsLookup = null;
+  })();
+}
+
+/** Known set sizes and prices: the app's own lookups first, the feed for the rest. */
+const knownSets = () => ({ ...(state.feed?.sets || {}), ...state.localSets });
 
 function updateSets() {
   const box = $("#dSets");
@@ -777,17 +806,17 @@ function updateSets() {
   const headHtml = `<div class="sets__head"><span class="label">${esc(t("sets.title"))}</span>
     ${c?.games ? `<button class="link" data-action="sets-reload" title="${esc(t("sets.reload"))}">↻</button>` : ""}</div>`;
   let body;
-  if (!state.feed) body = `<p class="empty">${esc(t(S().feed === false ? "sets.off" : "sets.nofeed"))}</p>`;
-  else if (!c) body = `<p class="empty">${esc(t(botOf(bot)?.IsConnectedAndLoggedOn ? "sets.loading" : "sets.waiting"))}</p>`;
+  if (!c) body = `<p class="empty">${esc(t(botOf(bot)?.IsConnectedAndLoggedOn ? "sets.loading" : "sets.waiting"))}</p>`;
   else if (!c.games) body = `<p class="empty">${esc(t("sets.err"))}</p>`;
   else {
-    const rows = nearSets(c.games, state.feed.sets);
+    const rows = nearSets(c.games, knownSets());
+    const note = (r) => (r.full ? t("sets.full") : r.size ? t("sets.missing", { n: r.missing, price: fmtUsd(r.price) }) : t("sets.unknown", { n: r.have }));
     body = rows.length
       // A row opens the badge page (full set: craft it) or the market filtered to this game's cards.
       ? `<ul>${rows.map((r) => `<li role="link" tabindex="0" title="${esc(t(r.full ? "sets.craft" : "sets.buy"))}" data-href="${r.full ? `https://steamcommunity.com/my/gamecards/${r.appid}/` : `https://steamcommunity.com/market/search?appid=753&category_753_Game%5B%5D=tag_app_${r.appid}&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2`}">
           <img src="${capsule(r.appid)}" alt="" loading="lazy">
-          <div><b>${esc(r.name || `App ${r.appid}`)}</b><small>${esc(r.full ? t("sets.full") : t("sets.missing", { n: r.missing, price: fmtUsd(r.price) }))}</small></div>
-          <span class="cards-pill${r.full ? " is-full" : ""}">${r.have}/${r.size}</span>
+          <div><b>${esc(r.name || `App ${r.appid}`)}</b><small>${esc(note(r))}</small></div>
+          <span class="cards-pill${r.full ? " is-full" : ""}">${r.have}/${r.size || "?"}</span>
         </li>`).join("")}</ul><small class="sets__note">${esc(t("sets.note"))}</small>`
       : `<p class="empty">${esc(t("sets.empty"))}</p>`;
   }

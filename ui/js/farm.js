@@ -88,19 +88,25 @@ export async function cardsByGame(bot) {
 }
 
 /**
- * Sets the account is closest to finishing: [{ appid, name, have, size, missing, price, full }]. `sets` is the
- * showcasemaker.com feed's { appid: [cards in set, whole set price in USD cents] }; price = the missing cards.
+ * Sets the account is closest to finishing: [{ appid, name, have, size, missing, price, full }]. `sets` is
+ * { appid: [cards in set, whole set price in USD cents] } (the app's own market lookups, else the showcasemaker.com
+ * feed); price = the missing cards. Games whose set size is not known yet come last with size 0, so every game with
+ * cards in the inventory shows up.
  */
 export function nearSets(byGame, sets, limit = 30) {
   const rows = [];
   for (const [appid, { name, classes }] of Object.entries(byGame || {})) {
     const [size, setPrice] = sets?.[appid] || [];
-    if (!size) continue;
-    const have = Math.min(size, Object.keys(classes).length);
+    const owned = Object.keys(classes).length;
+    if (!size) {
+      rows.push({ appid: Number(appid), name, have: owned, size: 0, missing: Infinity, price: 0, full: false });
+      continue;
+    }
+    const have = Math.min(size, owned);
     const missing = size - have;
     rows.push({ appid: Number(appid), name, have, size, missing, price: Math.round(((setPrice || 0) / size) * missing), full: !missing });
   }
-  rows.sort((a, b) => a.missing - b.missing || a.price - b.price || b.size - a.size);
+  rows.sort((a, b) => a.missing - b.missing || a.price - b.price || b.have - a.have);
   return rows.slice(0, limit);
 }
 

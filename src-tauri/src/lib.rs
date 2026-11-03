@@ -92,6 +92,7 @@ pub fn run() {
             extras::telegram_link,
             extras::telegram_send,
             extras::feed_get,
+            extras::card_set,
         ])
         .build(tauri::generate_context!())
         .expect("error while building SCMFARM");

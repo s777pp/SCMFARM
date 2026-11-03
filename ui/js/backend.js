@@ -41,6 +41,7 @@ function realBackend() {
     telegramLink: (token) => invoke("telegram_link", { token }),
     telegramSend: (token, chatId, text) => invoke("telegram_send", { token, chatId, text }),
     feedGet: () => invoke("feed_get"),
+    cardSet: (appid) => invoke("card_set", { appid }),
   };
 }
 
@@ -231,11 +232,11 @@ function mockBackend() {
     },
     // ?update=1 in the preview URL shows the update screen (it "fails" at the end, the demo cannot restart).
     async appVersion() {
-      return "0.2.0";
+      return "0.2.1";
     },
     async updateCheck() {
       const demo = params.has("update");
-      return { current: "0.2.0", latest: demo ? "0.3.0" : "0.2.0", available: demo };
+      return { current: "0.2.1", latest: demo ? "0.3.0" : "0.2.1", available: demo };
     },
     async updateInstall(onProgress) {
       const total = 13000000;
@@ -260,6 +261,12 @@ function mockBackend() {
     },
     async telegramSend(token, chatId, text) {
       console.info("telegram:", chatId, text);
+    },
+    // The demo answers from the demo feed's sets with no feed sizes (?nofeed=1 shows sizes arriving one by one).
+    async cardSet(appid) {
+      await sleep(400);
+      const [cards, cents] = feed.sets[appid] || [7, 140];
+      return { cards, cents, name: "" };
     },
     async feedGet() {
       return params.has("nofeed") ? null : feed;

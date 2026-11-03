@@ -3,6 +3,16 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.2.1 — 2026-11-04
+
+### Fixed
+- **"Sets close to a badge" stayed empty** ("no cards in the inventory yet") while showcasemaker.com had no set prices
+  yet: the panel only listed games the site's feed knew. Now every game with normal cards in the inventory is listed
+  at once, and the app asks the Steam Community Market itself for each game's set size and price (`card_set` in
+  `src-tauri/src/extras.rs`: 1-2 requests per game, one game every 3 s, at most 40 per inventory read, cached a day in
+  `card_sets.json`; Steam asking to slow down stops it until the next read). Until a size is known the row says
+  "N cards · finding the set size". The feed's prices are used for games not looked up yet.
+
 ## 0.2.0 — 2026-11-03
 
 ### Added
