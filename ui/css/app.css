@@ -329,6 +329,8 @@ textarea.input{height:auto;min-height:110px;padding:12px 14px;font-family:var(--
 .foot{display:flex;align-items:center;gap:14px;height:32px;padding:0 16px;border-top:1px solid var(--ui-line);background:rgba(4,8,20,.88);font-size:var(--ui-text-xs);color:var(--ui-faint)}
 .foot .link{font-size:var(--ui-text-xs)}
 .foot .link--site{color:var(--ui-muted)}
+.foot .link--about{display:inline-flex;align-items:center;gap:6px}
+.foot__sep{margin:0 -6px}
 .foot .link--site:hover{color:var(--ui-cyan-hi)}
 .foot .spacer{flex:1}
 dialog{max-width:560px;padding:28px 30px;border:1px solid var(--ui-line);border-radius:var(--ui-r-2xl);background:var(--ui-pop);color:var(--ui-ink);box-shadow:var(--ui-shadow-md)}
