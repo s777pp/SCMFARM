@@ -34,6 +34,8 @@ struct Running {
     child: Child,
     port: u16,
     password: String,
+    headless: bool,
+    keep_awake: bool,
 }
 
 #[derive(Default)]
@@ -59,6 +61,13 @@ impl Engine {
 
     fn is_running(&self) -> bool {
         self.endpoint().is_ok()
+    }
+
+    /// (headless, keep_awake) of the running engine.
+    fn mode(&self) -> Option<(bool, bool)> {
+        self.endpoint().ok()?;
+        let guard = self.running.lock().ok()?;
+        guard.as_ref().map(|r| (r.headless, r.keep_awake))
     }
 
     /// Asks ASF to exit, then kills it if it is still there after a few seconds.
@@ -104,6 +113,7 @@ pub struct EngineInfo {
     up_to_date: bool,
     version: &'static str,
     running: bool,
+    headless: bool,
 }
 
 #[tauri::command]
@@ -114,6 +124,7 @@ pub fn engine_info(app: AppHandle, engine: State<'_, Engine>) -> Result<EngineIn
         up_to_date: installed.as_deref() == Some(ASF_VERSION),
         version: ASF_VERSION,
         running: engine.is_running(),
+        headless: engine.mode().map_or(true, |m| m.0),
     })
 }
 
@@ -197,11 +208,11 @@ fn random_password() -> String {
     hex::encode(buf)
 }
 
-fn write_configs(dir: &Path, port: u16, password: &str) -> Result<(), String> {
+fn write_configs(dir: &Path, port: u16, password: &str, headless: bool) -> Result<(), String> {
     let config = dir.join("config");
     fs::create_dir_all(&config).map_err(|e| e.to_string())?;
     let global = json!({
-        "Headless": true,
+        "Headless": headless,
         "IPC": true,
         "IPCPassword": password,
         "AutoRestart": false,
@@ -220,15 +231,23 @@ fn write_configs(dir: &Path, port: u16, password: &str) -> Result<(), String> {
 }
 
 /// Starts ASF hidden and waits until its IPC answers. `keep_awake` passes `--system-required`,
-/// which stops Windows from sleeping while ASF runs.
+/// which stops Windows from sleeping while ASF runs. `interactive` turns ASF's Headless mode off: needed
+/// only for QR sign-in, which ASF refuses in headless mode. Its stdin stays empty, so any other prompt
+/// still ends with the bot stopped and `RequiredInput` set, exactly like headless.
+/// A running engine in a different mode is restarted.
 #[tauri::command]
 pub async fn engine_start(
     app: AppHandle,
     engine: State<'_, Engine>,
     keep_awake: Option<bool>,
+    interactive: Option<bool>,
 ) -> Result<(), String> {
-    if engine.is_running() {
-        return Ok(());
+    let keep_awake = keep_awake.unwrap_or(false);
+    let headless = !interactive.unwrap_or(false);
+    match engine.mode() {
+        Some(mode) if mode == (headless, keep_awake) => return Ok(()),
+        Some(_) => engine.stop().await,
+        None => {}
     }
     let dir = engine_dir(&app)?;
     if installed_version(&dir).is_none() {
@@ -236,7 +255,7 @@ pub async fn engine_start(
     }
     let port = free_port()?;
     let password = random_password();
-    write_configs(&dir, port, &password)?;
+    write_configs(&dir, port, &password, headless)?;
 
     let mut cmd = Command::new(dir.join(ASF_EXE));
     cmd.arg("--no-restart")
@@ -244,7 +263,7 @@ pub async fn engine_start(
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
-    if keep_awake.unwrap_or(false) {
+    if keep_awake {
         cmd.arg("--system-required");
     }
     #[cfg(windows)]
@@ -257,6 +276,8 @@ pub async fn engine_start(
         child,
         port,
         password: password.clone(),
+        headless,
+        keep_awake,
     });
 
     for _ in 0..180 {

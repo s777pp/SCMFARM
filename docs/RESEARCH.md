@@ -80,6 +80,14 @@ How ASF behaves in **Headless** mode (`Headless: true`), which we use because th
   (`BotCredentialsProvider.AcceptDeviceConfirmationAsync`, `Bot.WantsQrCodeLogin`). In headless mode the
   user types the 5-character code from the Steam Mobile app's Steam Guard screen instead. Getting the
   "tap Approve" flow would need non-headless ASF with its stdin piped to us — possible later, not needed now.
+* **QR sign-in (implemented).** `Bot.WantsQrCodeLogin` returns false in headless mode, but in non-headless
+  mode `RequestInput(QrCodeLogin)` first returns a value pre-set through `POST …/Input` `{Type: 8, Value: "Y"}`
+  (`Steam/Bot.cs` `RequestInput`, `SetUserInput`). So for a QR sign-in the app restarts ASF with
+  `Headless: false` (stdin is empty, so every other console prompt still returns nothing and the bot stops with
+  `RequiredInput` set, same as headless), creates the bot disabled, sends Input 8 "Y", starts it, and renders
+  `Bot.QrChallengeURL` (serialized, refreshed by ASF when Steam rotates the challenge) as a QR code. The user
+  scans it in the Steam Mobile app; ASF checks the scanned account matches `SteamLogin` and saves the refresh
+  token. The app then rewrites the bot config (enabled) and restarts ASF headless. No password involved.
 * After the first successful login ASF stores a **refresh token** in `config/{name}.db`; later starts need
   neither the password nor a code until Steam invalidates the token.
 

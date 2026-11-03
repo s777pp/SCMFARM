@@ -158,6 +158,8 @@ textarea.input{height:auto;min-height:110px;padding:12px 14px;font-family:var(--
 .guard form{display:grid;gap:10px;justify-items:start}
 .guard small{grid-column:1/-1;color:var(--ui-faint)}
 
+.qr{display:grid;place-items:center;padding:12px;border-radius:var(--ui-r-lg);background:#fff;box-shadow:0 0 30px rgba(31,201,241,.25)}
+.qr svg{display:block;width:220px;height:220px}
 .spinner{display:flex;align-items:center;gap:12px;margin-top:22px;font-weight:700;color:var(--ui-muted)}
 .spinner::before{content:"";width:20px;height:20px;border:2.5px solid rgba(31,201,241,.25);border-top-color:var(--ui-cyan);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}

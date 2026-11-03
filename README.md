@@ -23,7 +23,7 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 
 * The Steam password is never stored: it goes from the sign-in form to ASF's memory over 127.0.0.1
   (`POST /Api/Bot/main/Input`). After the first sign-in ASF keeps Steam's login token in `config/main.db`.
-* Steam Guard: the wizard shows the e-mail code screen or the Steam Mobile app code screen, depending on what
+* Sign-in by QR code (scan in the Steam Mobile app, no password) or by password + Steam Guard: the wizard shows the e-mail code screen or the Steam Mobile app code screen, depending on what
   ASF asks for (`RequiredInput`).
 * No telemetry. ASF's own extras are switched off (`RemoteCommunication: 0`, self-update off, `FilterBadBots` off).
 
@@ -124,7 +124,7 @@ Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
 * Only installers built by the GitHub Actions workflow in this repository from a tagged commit are signed.
 * Every component is open source under an OSI-approved licence: Showcase Farm (Apache-2.0), ArchiSteamFarm
-  (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1).
+  (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1), qrcode-generator (MIT).
   There are no proprietary parts and no commercial dual licensing.
 
 Team roles:
@@ -140,7 +140,7 @@ The privacy statement for signed releases is the [Privacy](#privacy) section abo
 ## Roadmap
 
 * **Stage 1 (this prototype):** wizard, one account, dashboard, tray, autostart, RU/EN.
-* **Stage 2:** several Steam accounts, the remaining six languages (de, tr, fr, uk, es, pt), "approve in the
+* **Stage 2:** several Steam accounts, the remaining six languages (de, tr, fr, uk, es, pt), QR re-login from the dashboard, "approve in the
   Steam app" sign-in, a Windows job object so the engine always exits with the app.
 * **Stage 3:** first public release from CI, code signing via SignPath Foundation (apply after the first
   public release, then add the SignPath GitHub Action to the workflow), auto-update, download page on

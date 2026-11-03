@@ -17,7 +17,7 @@ function realBackend() {
         unlisten();
       }
     },
-    engineStart: (keepAwake) => invoke("engine_start", { keepAwake: !!keepAwake }),
+    engineStart: (keepAwake, interactive) => invoke("engine_start", { keepAwake: !!keepAwake, interactive: !!interactive }),
     engineStop: () => invoke("engine_stop"),
     asf: (method, path, body) => invoke("asf_request", { method, path, body: body ?? null }),
     logTail: (lines) => invoke("engine_log_tail", { lines }),
@@ -47,6 +47,7 @@ function mockBackend() {
   let bot = null;
   let password = null;
   let code = null;
+  let qrWanted = false;
   let paused = false;
   let pausedByDefault = false;
   const queue = [];
@@ -80,7 +81,13 @@ function mockBackend() {
     bot.KeepRunning = true;
     bot.RequiredInput = 0;
     await sleep(900);
-    if (!password) {
+    if (qrWanted) {
+      qrWanted = false;
+      Object.assign(bot, { RequiredInput: 8, QrChallengeURL: "https://s.team/q/1/" + Date.now() });
+      await sleep(7000); // "scanned" on the phone
+      if (bot.RequiredInput === 8) Object.assign(bot, { RequiredInput: 0, QrChallengeURL: null, IsConnectedAndLoggedOn: true, Nickname: "Demo farmer" });
+      paused = pausedByDefault;
+    } else if (!password) {
       Object.assign(bot, { KeepRunning: false, RequiredInput: 2 });
     } else if (password === "wrong") {
       password = null;
@@ -144,6 +151,7 @@ function mockBackend() {
       if (!bot) return fail("Bot not found");
       if (action === "Input") {
         if (body.Type === 2) password = body.Value;
+        if (body.Type === 8) qrWanted = body.Value === "Y";
         if (body.Type === 3 || body.Type === 5) {
           if (body.Value.length !== 5) return fail("invalid");
           code = body.Value;
@@ -152,7 +160,7 @@ function mockBackend() {
         return ok();
       }
       if (action === "Start") start();
-      if (action === "Stop") Object.assign(bot, { KeepRunning: false, IsConnectedAndLoggedOn: false });
+      if (action === "Stop") Object.assign(bot, { KeepRunning: false, IsConnectedAndLoggedOn: false, RequiredInput: 0, QrChallengeURL: null });
       if (action === "Pause") paused = true;
       if (action === "Resume") paused = false;
       return ok();

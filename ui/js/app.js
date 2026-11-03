@@ -57,11 +57,23 @@ function bootEngine() {
   return engineBoot;
 }
 
+// engine_start restarts the engine when the requested mode differs from the running one.
+async function engineMode(interactive) {
+  await bootEngine();
+  setEngine("starting");
+  try {
+    await api.engineStart(!!S().keepAwake, interactive);
+    state.engineAwake = !!S().keepAwake;
+    setEngine("ready");
+  } catch (e) {
+    setEngine("error", 0, String(e?.message || e));
+    throw e;
+  }
+}
+
 async function restartEngineIfNeeded() {
   if (state.engineAwake === !!S().keepAwake) return;
-  await api.engineStop();
-  engineBoot = null;
-  await bootEngine();
+  await engineMode(false);
 }
 
 function setEngine(phase, pct = 0, err = null) {
@@ -159,8 +171,11 @@ const stepRenderers = {
         <div class="note">${esc(t("signin.privacy"))}</div>
         <div class="step__bar" style="border:0;padding-top:0">
           <button class="btn btn--primary" type="submit"${ready ? "" : " disabled"}>${esc(t("signin.submit"))}</button>
+          <button class="btn" type="button" data-action="signin-qr"${ready ? "" : " disabled"}>${esc(t("signin.qrButton"))}</button>
           ${ready ? "" : `<span class="spinner" style="margin:0">${esc(t(`engine.${state.engine.phase === "error" ? "failed" : state.engine.phase}`, { pct: state.engine.pct }))}</span>`}
         </div></form>`;
+    } else if (si.kind === "qr") {
+      body = qrBox(si.url);
     } else if (si.kind === "connecting") {
       body = `<div class="spinner">${esc(t("signin.connecting"))}</div>`;
     } else if (si.kind === "email" || si.kind === "app" || si.kind === "parental") {
@@ -238,6 +253,24 @@ function guardBox(kind, reason) {
   </div>${reason === "code" ? `<div class="error">${esc(t("signin.err_code"))}</div>` : ""}`;
 }
 
+function qrBox(url) {
+  let svg = "";
+  try {
+    const qr = window.qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    svg = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  } catch (e) {
+    console.error("qr", e);
+  }
+  return `<div class="guard">
+    <div><h3>${esc(t("signin.qrTitle"))}</h3><p>${esc(t("signin.qrLead", { login: S().login || "" }))}</p>
+      <ol>${t("signin.qrSteps").map((s) => `<li>${esc(s)}</li>`).join("")}</ol></div>
+    <div class="qr">${svg}</div>
+    <small>${esc(t("signin.qrNote"))} <button class="link" data-action="qr-cancel">${esc(t("signin.qrCancel"))}</button></small>
+  </div>`;
+}
+
 function renderStep() {
   const el = $("#step");
   if (!el) return;
@@ -266,11 +299,27 @@ async function goto(step) {
 }
 
 // ------------------------------------------------------------------ sign-in
-const signIn = new SignIn((st) => {
-  state.signin = st;
-  if (st.kind === "ok") state.loggedOnSince = Date.now();
-  if (state.mode === "wizard") renderStep();
-});
+const signIn = new SignIn(
+  (st) => {
+    state.signin = st;
+    if (st.kind === "ok") state.loggedOnSince = Date.now();
+    if (state.mode === "wizard") renderStep();
+  },
+  { toInteractive: () => engineMode(true), toHeadless: () => engineMode(false) },
+);
+
+async function onQrSignIn() {
+  const login = $("#login")?.value.trim();
+  if (!login) return $("#login")?.focus();
+  await saveSettings({ login });
+  try {
+    await signIn.beginQr(S());
+  } catch (e) {
+    console.error(e);
+    state.signin = { kind: "error", reason: "qr" };
+    renderStep();
+  }
+}
 
 async function onSignInSubmit(form) {
   const login = form.login.value.trim();
@@ -402,7 +451,8 @@ function updateDash() {
     if (inputBox.dataset.need !== "2") {
       inputBox.innerHTML = `<form id="dashPassword"><p class="label">${esc(t("dash.needPassword"))}</p>
         <label class="field"><span>${esc(t("signin.password"))}</span><input class="input" type="password" name="password" required></label>
-        <button class="btn btn--primary" style="margin-top:12px" type="submit">${esc(t("dash.passwordSubmit"))}</button></form>
+        <button class="btn btn--primary" style="margin-top:12px" type="submit">${esc(t("dash.passwordSubmit"))}</button>
+        <button class="btn" style="margin-top:12px" type="button" data-action="relogin">${esc(t("signin.qrButton"))}</button></form>
         <div class="note">${esc(t("signin.privacy"))}</div>`;
     }
   } else if ([INPUT.SteamGuard, INPUT.TwoFactor, INPUT.Parental].includes(need)) {
@@ -487,6 +537,18 @@ document.addEventListener("click", async (e) => {
     state.signin = { kind: "form" };
     state.maxStep = state.step;
     renderWizard();
+  } else if (a === "signin-qr") onQrSignIn();
+  else if (a === "qr-cancel") {
+    await signIn.cancelQr().catch(console.warn);
+    state.signin = { kind: "form" };
+    renderStep();
+  } else if (a === "relogin") {
+    clearInterval(pollTimer);
+    state.mode = "wizard";
+    state.signin = { kind: "form" };
+    state.step = 1;
+    state.maxStep = STEPS.length - 1;
+    render();
   } else if (a === "engine-retry") bootEngine().catch(() => {});
   else if (a === "pause") { await pauseFarming(); pollOnce(); }
   else if (a === "resume") { await resumeFarming(); pollOnce(); }

@@ -3,7 +3,7 @@
 import { api } from "./backend.js";
 
 export const BOT = "main";
-export const INPUT = { None: 0, Login: 1, Password: 2, SteamGuard: 3, Parental: 4, TwoFactor: 5 };
+export const INPUT = { None: 0, Login: 1, Password: 2, SteamGuard: 3, Parental: 4, TwoFactor: 5, QrCodeLogin: 8 };
 // EFarmingOrder values
 export const ORDERS = { fast: 3, most: 4, new: 13, any: 0 };
 // EFarmingPreferences flags
@@ -128,17 +128,21 @@ export async function failureSince(mark) {
 /**
  * Drives one sign-in: creates the bot (farming paused while the wizard runs), feeds the password and
  * Steam Guard codes to ASF through IPC when it asks for them (RequiredInput), reports states to `onState`:
- * connecting | email | app | parental | password | ok | error (with `reason`).
+ * connecting | email | app | parental | password | qr (with `url`) | ok | error (with `reason`).
+ *
+ * QR sign-in: ASF only offers it when not in Headless mode, so `hooks.toInteractive()` restarts the engine
+ * non-headless for the sign-in and `hooks.toHeadless()` switches back once Steam has issued the login token.
  */
 export class SignIn {
-  constructor(onState) {
+  constructor(onState, hooks) {
     this.onState = onState;
+    this.hooks = hooks;
     this.timer = null;
     this.password = null;
   }
 
   emit(kind, extra = {}) {
-    const key = kind + (extra.reason || "");
+    const key = kind + (extra.reason || "") + (extra.url || "");
     if (key === this.lastKey && kind !== "ok") return;
     this.lastKey = key;
     this.onState({ kind, ...extra });
@@ -146,6 +150,7 @@ export class SignIn {
 
   async begin(settings, password) {
     this.cancel();
+    this.qr = false;
     this.password = password;
     this.passwordSent = false;
     this.codeSent = false;
@@ -153,9 +158,69 @@ export class SignIn {
     this.startedAt = Date.now();
     this.lastKey = null;
     this.emit("connecting");
+    await this.hooks.toHeadless();
     this.mark = await markLog();
     await saveBot(botConfig(settings, { paused: true }));
     this.loop();
+  }
+
+  async beginQr(settings) {
+    this.cancel();
+    this.settings = settings;
+    this.qr = true;
+    this.qrShown = false;
+    this.qrTries = 0;
+    this.password = null;
+    this.startedAt = Date.now();
+    this.lastKey = null;
+    this.emit("connecting");
+    await this.hooks.toInteractive();
+    this.mark = await markLog();
+    // Disabled so ASF doesn't start it on its own before it knows we want the QR code.
+    await saveBot({ ...botConfig(settings, { paused: true }), Enabled: false });
+    for (let i = 0; i < 20 && !(await getBot()); i++) await new Promise((r) => setTimeout(r, 500));
+    await this.askQr();
+    this.loop();
+  }
+
+  async askQr() {
+    this.qrTries++;
+    await sendInput(INPUT.QrCodeLogin, "Y");
+    await startBot();
+  }
+
+  async cancelQr() {
+    this.cancel();
+    this.qr = false;
+    await stopBot();
+    await this.hooks.toHeadless();
+  }
+
+  async qrTick(b) {
+    if (b.IsConnectedAndLoggedOn) {
+      // Token saved; go back to headless with the normal (enabled) config and let the usual flow confirm it.
+      this.qr = false;
+      this.emit("connecting");
+      await saveBot(botConfig(this.settings, { paused: true }));
+      await this.hooks.toHeadless();
+      this.startedAt = Date.now();
+      this.kicked = false;
+      return false;
+    }
+    if (b.RequiredInput === INPUT.QrCodeLogin && b.QrChallengeURL) {
+      this.qrShown = true;
+      this.emit("qr", { url: b.QrChallengeURL });
+      return false;
+    }
+    if (!b.KeepRunning) {
+      if (!this.qrShown && this.qrTries < 3) await this.askQr();
+      else {
+        await this.cancelQr();
+        this.emit("error", { reason: "qr" });
+        return true;
+      }
+    }
+    return false;
   }
 
   loop() {
@@ -188,6 +253,7 @@ export class SignIn {
       if (Date.now() - this.startedAt > 30000) await this.fail("generic");
       return !this.timer;
     }
+    if (this.qr) return this.qrTick(b);
     if (b.IsConnectedAndLoggedOn) {
       this.cancel();
       this.password = null;

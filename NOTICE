@@ -11,4 +11,7 @@ the ArchiSteamFarm project.
 It includes the Montserrat typeface, Copyright 2011 The Montserrat Project Authors,
 licensed under the SIL Open Font License, Version 1.1 (see licenses/Montserrat-OFL.txt).
 
+It includes qrcode-generator, Copyright (c) 2009 Kazuhiko Arase, licensed under the MIT License
+(see licenses/qrcode-generator-MIT.txt).
+
 It is built with Tauri (https://tauri.app), licensed under Apache-2.0 / MIT.
