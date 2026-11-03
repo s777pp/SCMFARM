@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Steam trading card farming on your own PC, powered by ArchiSteamFarm",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",

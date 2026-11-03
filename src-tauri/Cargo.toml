@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Steam trading card farming on your own PC, powered by ArchiSteamFarm"
 edition = "2021"
 rust-version = "1.77"
+license = "Apache-2.0"
 
 [lib]
 name = "showcase_farm_lib"

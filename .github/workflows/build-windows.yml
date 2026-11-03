@@ -1,0 +1,51 @@
+# Builds the Windows installer from this repository's source on GitHub-hosted runners, so every published
+# binary can be traced to a commit (required for SignPath Foundation signing, see README "Code signing policy").
+# Signing is not wired in yet; the unsigned installer is uploaded as a workflow artifact.
+name: Build Windows installer
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Check product name and version
+        run: node scripts/check-version.mjs
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build installer
+        run: npm run build
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: showcase-farm-windows-${{ github.sha }}
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

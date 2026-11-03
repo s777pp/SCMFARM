@@ -85,9 +85,70 @@ Change `ASF_VERSION`, `ASF_URL` and `ASF_SHA512` in `src-tauri/src/engine.rs` (h
 `SHA512SUMS`). On next start the app downloads the new build and keeps the existing `config/` folder,
 so users stay signed in. Read the ASF changelog for IPC changes first.
 
+## Continuous integration
+
+[`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml) builds the NSIS installer on a
+GitHub-hosted Windows runner for every push to `main`, every pull request and every `v*` tag, and uploads it as
+a workflow artifact. Release binaries are only ever taken from these CI runs, never from a developer's PC.
+`scripts/check-version.mjs` runs first and fails the build if `package.json`, `src-tauri/tauri.conf.json`,
+`src-tauri/Cargo.toml` and the release tag disagree on the version, or if the product name is not
+"Showcase Farm". Commit `src-tauri/Cargo.lock` after the first build so CI builds are reproducible.
+
+To release: bump the version in all three files, commit, tag `vX.Y.Z`, push the tag.
+
+## Install and uninstall
+
+The installer is a per-user NSIS installer (no admin rights needed). It registers a normal uninstaller in
+Windows "Apps & features". The uninstaller removes the program and offers to delete the app data folder
+(`%APPDATA%\com.showcasemaker.farm`: settings, the downloaded ASF engine and the Steam login token).
+Quit the app from the tray first so the engine is stopped.
+
+## Privacy
+
+* Showcase Farm has **no telemetry, analytics or crash reporting**. If anything like that is ever added, it
+  will be off until the user explicitly agrees.
+* The Steam login and password are used only to sign in to Steam through the local ASF process
+  (127.0.0.1). The password is never written to disk and never sent to showcasemaker.com or anyone else.
+  Steam's login token stays in the app data folder on the user's PC.
+* Network connections the app makes: Steam (by ASF, for signing in and farming), GitHub (one-time download
+  of the pinned ASF release), Steam's image CDN (game pictures and the avatar on the dashboard).
+  The "showcasemaker.com" button only opens the site in the user's browser.
+* ASF's optional remote features (joining its Steam group, public trade listing, self-update, bad-bot list)
+  are switched off by the app.
+
+## Code signing policy
+
+Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+*(Signing is planned for the first public release; until then installers from CI are unsigned.)*
+
+* Only installers built by the GitHub Actions workflow in this repository from a tagged commit are signed.
+* Every component is open source under an OSI-approved licence: Showcase Farm (Apache-2.0), ArchiSteamFarm
+  (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1).
+  There are no proprietary parts and no commercial dual licensing.
+
+Team roles:
+
+| Role | Who |
+|---|---|
+| Authors (committers) | Project owner (showcasemaker.com) |
+| Reviewers | Project owner (showcasemaker.com) |
+| Approvers (approve each signing request) | Project owner (showcasemaker.com) |
+
+The privacy statement for signed releases is the [Privacy](#privacy) section above.
+
+## Roadmap
+
+* **Stage 1 (this prototype):** wizard, one account, dashboard, tray, autostart, RU/EN.
+* **Stage 2:** several Steam accounts, the remaining six languages (de, tr, fr, uk, es, pt), "approve in the
+  Steam app" sign-in, a Windows job object so the engine always exits with the app.
+* **Stage 3:** first public release from CI, code signing via SignPath Foundation (apply after the first
+  public release, then add the SignPath GitHub Action to the workflow), auto-update, download page on
+  showcasemaker.com.
+
 ## Licences
 
-* Showcase Farm code: © showcasemaker.com, all rights reserved (decide on a licence before publishing the repo).
+* Showcase Farm: **Apache License 2.0** — [LICENSE](LICENSE), attributions in [NOTICE](NOTICE).
 * ArchiSteamFarm: Apache License 2.0 — `licenses/ArchiSteamFarm-LICENSE.txt`; the downloaded ASF folder also
   keeps its own `LICENSE.txt`. ASF has no NOTICE file. The About dialog credits ASF and links to its repository.
 * Montserrat: SIL Open Font License 1.1 — `licenses/Montserrat-OFL.txt`.
