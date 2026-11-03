@@ -168,8 +168,7 @@ const stepRenderers = {
           <small>${esc(t("signin.loginHint"))}</small></label>
         <label class="field"><span>${esc(t("signin.password"))}</span>
           <input class="input" type="password" name="password" id="password" autocomplete="current-password" required></label>
-        ${si.kind === "error" ? `<div class="error">${esc(t(`signin.err_${si.reason || "generic"}`))}</div>` : ""}
-        <div class="note">${esc(t("signin.privacy"))}</div>
+        ${si.kind === "error" ? `<div class="error">${esc(t(`signin.err_${si.reason || "generic"}`))}</div>` : `<div class="note">${esc(t("signin.privacy"))}</div>`}
         <div class="form-actions">
           <button class="btn btn--primary" type="submit"${ready ? "" : " disabled"}>${esc(t("signin.submit"))}</button>
           <button class="btn" type="button" data-action="signin-qr"${ready ? "" : " disabled"}>${esc(t("signin.qrButton"))}</button>
@@ -311,7 +310,13 @@ const signIn = new SignIn(
 
 async function onQrSignIn() {
   const login = $("#login")?.value.trim();
-  if (!login) return $("#login")?.focus();
+  if (!login) {
+    // Say why nothing starts instead of silently focusing the field.
+    state.signin = { kind: "error", reason: "login" };
+    renderStep();
+    $("#login")?.focus();
+    return;
+  }
   await saveSettings({ login });
   try {
     await signIn.beginQr(S());

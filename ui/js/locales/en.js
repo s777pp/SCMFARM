@@ -83,6 +83,7 @@ export default {
     err_code: "That code did not work. Wait for a fresh one and try again.",
     err_rate: "Steam blocked sign-in attempts for a while after too many tries. Wait about 30 minutes and try again.",
     err_generic: "Sign-in did not finish. Check your login and try again.",
+    err_login: "Enter your Steam login first. The QR sign-in needs it to check that the phone approves this exact account.",
     err_needLogin: "Enter your login and password.",
   },
   what: {

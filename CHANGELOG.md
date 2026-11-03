@@ -18,6 +18,8 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
   (only the game queue scrolls inside its panel; the "Steam asks for the password again" box is one row now).
 - **Language menu** in the app's style (globe, current language, list with codes) instead of the system select.
 - **showcasemaker.com** in the status bar is a link.
+- **QR button with an empty login** now says why nothing starts (the login is needed to check that the phone
+  approves this exact account) instead of only focusing the field; the error takes the privacy note's place.
 
 ### Added
 - **QR sign-in** via the Steam Mobile app (no password). ASF allows QR only outside Headless mode, so the
