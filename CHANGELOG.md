@@ -18,6 +18,8 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 ### Changed (owner feedback after the first launch)
 - **Name: SCMFARM** (was "Showcase Farm"): window title, tray, installer (`SCMFARM_<ver>_x64-setup.exe`),
   texts, docs. Identifier `com.showcasemaker.farm` and the data folder stay the same, so nothing is lost.
+- **The program file is `SCMFARM.exe`** (`mainBinaryName`; was `showcase-farm.exe`). A new file name also stops
+  Explorer from showing the old icon it had cached for the old file.
 - **Icons from showcasemaker.com**: the site's white S with an arrow on its navy tile
   (`src-tauri/icons/*`, `ui/img/logo.png`), made from the site's `static/icon.png`.
 - **Looks like an app, not a page**: no Windows frame (`decorations: false`); the top bar is our own title bar
