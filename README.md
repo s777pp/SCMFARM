@@ -25,6 +25,8 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
   (`POST /Api/Bot/main/Input`). After the first sign-in ASF keeps Steam's login token in `config/main.db`.
 * Sign-in by QR code (scan in the Steam Mobile app, no password) or by password + Steam Guard: the wizard shows the e-mail code screen or the Steam Mobile app code screen, depending on what
   ASF asks for (`RequiredInput`).
+* Several Steam accounts (one ASF bot each), Windows notifications and optional Telegram messages through the user's
+  own bot, a "sets close to a badge" panel from the Steam inventory, and Steam sale dates on the dashboard.
 * No telemetry. ASF's own extras are switched off (`RemoteCommunication: 0`, self-update off, `FilterBadBots` off).
 
 ## Project layout
@@ -35,6 +37,8 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 | `src-tauri/src/engine.rs` | Download/verify/unpack ASF, start/stop it, IPC proxy, log tail |
 | `src-tauri/src/settings.rs` | App settings file, autostart, opening links |
 | `src-tauri/src/lib.rs` | Tray icon, close-to-tray, single instance, cleanup on exit |
+| `src-tauri/src/extras.rs` | Windows notifications, the user's own Telegram bot, the showcasemaker.com feed (sale dates, set prices) |
+| `src-tauri/src/updater.rs` | Signed self-update of the portable exe |
 | `licenses/` | ArchiSteamFarm licence (Apache-2.0), Montserrat font licence (OFL), qrcode-generator (MIT) — built into the exe (`src-tauri/src/system.rs`), About → Licences writes them out |
 | `scripts/preview.mjs` | Serves `ui/` for a browser preview in demo mode |
 
@@ -126,12 +130,20 @@ both folders and the exe itself, then quits.
 * The Steam login and password are used only to sign in to Steam through the local ASF process
   (127.0.0.1). The password is never written to disk and never sent to showcasemaker.com or anyone else.
   Steam's login token stays in the app data folder on the user's PC.
-* Network connections the app makes: Steam (by ASF, for signing in and farming), GitHub (one-time download
-  of the pinned ASF release), Steam's image CDN (game pictures and the avatar on the dashboard), and
-  showcasemaker.com once per start to check for a newer SCMFARM (only the version check and the download; no
-  account data, no identifiers). The first-run wizard says so and has a switch "Update SCMFARM automatically"
-  (Settings → Options) that turns this request off.
-  The "showcasemaker.com" button only opens the site in the user's browser.
+* Network connections the app makes:
+  * Steam (by ASF, for signing in, farming and reading the account's own inventory for the sets panel);
+  * GitHub (one-time download of the pinned ASF release);
+  * Steam's image CDN (game pictures and avatars on the dashboard);
+  * showcasemaker.com, only with the matching switch on (Settings → Options, both on by default and explained there):
+    "Update SCMFARM automatically" asks once per start for the newest version; "Steam news from showcasemaker.com"
+    downloads at most once a day one file that is the same for everyone (Steam sale dates, card set sizes and
+    prices). Neither request carries account data or identifiers;
+  * api.telegram.org, only if the user connects their **own** Telegram bot (token from @BotFather). Messages go
+    straight from the PC to Telegram and contain only the account's display name and what happened ("farming
+    finished", "Steam asks for a code"). The bot token and chat id stay in `settings.json` on the PC; "Turn off"
+    deletes them.
+  The "showcasemaker.com" button and the links in the app only open pages in the user's browser.
+* Windows notifications are local (switch "Notify me").
 * ASF's optional remote features (joining its Steam group, public trade listing, self-update, bad-bot list)
   are switched off by the app.
 
@@ -161,10 +173,9 @@ The privacy statement for signed releases is the [Privacy](#privacy) section abo
 
 * **Done:** wizard, one account, dashboard, tray, autostart, eight languages, own title bar, log out,
   portable exe with signed self-update, download page on showcasemaker.com.
-* **Next:** first public release from CI, then code signing via SignPath Foundation (apply after that release,
-  then enable the SignPath step in the workflow).
-* **Later:** several Steam accounts, QR re-login from the dashboard, "approve in the Steam app" sign-in, a Windows
-  job object so the engine always exits with the app.
+* **0.2.0:** several Steam accounts, notifications (Windows, own Telegram bot), sets close to a badge, Steam sale dates.
+* **Next:** code signing via SignPath Foundation (applied; enable the SignPath step in the workflow on approval).
+* **Later:** "approve in the Steam app" sign-in, a Windows job object so the engine always exits with the app.
 
 ## Licences
 

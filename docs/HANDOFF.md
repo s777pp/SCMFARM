@@ -1,6 +1,6 @@
 # Hand-off: where the work stands
 
-Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
+Last updated 2026-11-03 (0.2.0). History of changes: `CHANGELOG.md`.
 
 ## State
 - Stage 0 (research) and stage 1 (prototype) are done and committed on `master` (local repo
@@ -27,7 +27,8 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
   sends `POST /Api/Bot/main/Input` and starts the bot again. Details in `docs/RESEARCH.md` §3.
 - QR sign-in needs non-headless ASF, so the engine restarts in that mode only for the QR sign-in
   (`engine_start(interactive=true)`), then back to headless.
-- One bot named `main`. ASF self-update off; the app pins the ASF version.
+- One ASF bot per Steam account (0.2.0): the first is `main` (as in 0.1.x), added ones `acc2`, `acc3`, … ASF
+  self-update off; the app pins the ASF version.
 - Farming options map to ASF config: `FarmingOrders`, `FarmingPreferences` (SkipRefundableGames,
   FarmPriorityQueueOnly for "only chosen games"), `RemoteCommunication: 0`.
 
@@ -42,12 +43,11 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
   the three files, commit, tag `vX.Y.Z`, push branch and tag.
 
 ## Next steps
-1. Test with a real account (QR and password flows, farming, pause/resume, skip, farm next). Fix what breaks.
-2. Stage 2: several accounts; a Windows Job object so ASF always dies with the
-   app; QR re-login directly from the dashboard; maybe "tap Approve" sign-in (needs non-headless ASF with a
-   stdin pipe answering the DeviceConfirmation prompt).
-3. Stage 3: push to GitHub, first CI build, first public release, then apply to SignPath Foundation and add
-   their GitHub Action; auto-update; download page on showcasemaker.com.
+1. Test 0.2.0 with real accounts: a second account, a Windows notification, a Telegram message from the owner's own
+   bot, the sets panel against the real inventory JSON (field names in `cardsByGame` are read case-insensitively).
+2. Still open: a Windows Job object so ASF always dies with the app; "tap Approve" sign-in (needs non-headless ASF
+   with a stdin pipe answering the DeviceConfirmation prompt).
+3. SignPath: on approval enable the workflow step.
 
 ## Window and look (2026-11-03)
 - No Windows frame (`tauri.conf.json` `decorations: false`, `shadow: true`): `#titlebar` in `ui/index.html` is the
@@ -57,10 +57,27 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 - Layout targets the default 1180 x 760 window with no scrollbar: check every wizard step and the dashboard at that
   size after UI changes (`npm run preview`, viewport 1180 x 760).
 
-## Accounts (2026-11-03)
-- `accounts()` in app.js builds the title bar list from `settings.account` + the live bot; still one ASF bot
-  `main`. Several accounts = several bots: give each a name, loop `accounts()` over them, keep `deleteBot(name)`.
-- Log out = `stopBot()` + `deleteBot()` (ASF deletes config + .db) + clear `login` / `account` / `wizardDone`.
+## Accounts (0.2.0)
+- `settings.accounts` = `[{ bot, login, name, avatar, level, farmMode, order, chosenText, skipRefundable }]`,
+  `settings.current` = the bot the dashboard shows. App-wide options stay top-level. `migrateSettings()` in app.js
+  moves a 0.1.x flat setup into `accounts[0]` with bot `main`, so users stay signed in.
+- The wizard edits `state.draft` (a copy of an account, or a new one from `newAccount()`); "Start farming" saves it
+  into the list. "Add account" (title bar `+` or the account menu) opens the wizard at the sign-in step; "Back to
+  the farm" in the step rail drops an unfinished new bot from ASF again.
+- Polling: one `GET /Api/Bot/main,acc2,…` every 3 s; avatars in the title bar and tabs in the dashboard head
+  switch the account. Log out = `stopBot(bot)` + `deleteBot(bot)` and remove it from the list.
+- QR sign-in restarts the whole engine non-headless, so other accounts reconnect once (they keep their tokens).
+
+## Notifications, feed, sets panel (0.2.0)
+- `src-tauri/src/extras.rs`: `notify_toast` (tauri-plugin-notification), `telegram_link` / `telegram_send` (the
+  user's own bot, token + chat id in settings.json key `telegram`), `feed_get` (showcasemaker.com
+  `/api/scmfarm/feed`, cached a day as `feed.json` in the app data folder).
+- Feed contract: `{v:1, updated, sales:[{id, kind: sale|fest|nextfest, name, start, end, rewards[]}], sets:{appid:[cards, set_cents]}}`.
+  Built by the site (crawl of the Steam market, `smweb/card_prices.py` there). A missing feed = no sale strip and
+  the sets panel explains why.
+- `watchForNews()` in app.js: "done" after the account farmed since start, "input" when Steam asks for a password
+  or code outside the wizard.
+- Sets panel: `cardsByGame()` + `nearSets()` in farm.js; inventory re-read at most every 30 min or by its reload button.
 
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.

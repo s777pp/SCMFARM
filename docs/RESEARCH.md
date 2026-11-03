@@ -43,12 +43,13 @@ Endpoints we use (from `IPC/Controllers/Api/*.cs`):
 |---|---|---|
 | Engine alive / version | `GET /Api/ASF` | `Result.Version`, `Result.GlobalConfig`, … |
 | Add/update a bot | `POST /Api/Bot/{name}` body `{ "BotConfig": { … } }` | writes `config/{name}.json`; ASF picks it up. Keeps an existing password if the request has none |
-| Bot status | `GET /Api/Bot/{name}` | `Result[name]` = Bot (see below) |
+| Bot status | `GET /Api/Bot/{name}` | `Result[name]` = Bot (see below); `{a,b}` comma list = several bots in one call (0.2.0 polls all accounts this way) |
 | Start / stop | `POST /Api/Bot/{name}/Start`, `/Stop` | |
 | Pause / resume farming | `POST /Api/Bot/{name}/Pause` body `{ "Permanent": true, "ResumeInSeconds": 0 }`, `POST …/Resume` | |
 | Submit password / codes | `POST /Api/Bot/{name}/Input` body `{ "Type": <EUserInputType>, "Value": "…" }` | see §3 |
 | Delete bot | `DELETE /Api/Bot/{name}` | |
 | Commands | `POST /Api/Command` body `{ "Command": "fqadd main 440,570" }` | farming queue `fq`/`fqadd`/`fqrm`, blacklist `fb`/`fbadd`/`fbrm` |
+| Inventory | `GET /Api/Bot/{name}/Inventory/753/6` | `Result[name] = { Assets[], Descriptions[] }` (SteamKit `CEcon_Asset` / `CEconItem_Description`, `BotController.cs:289`). Trading cards: tags `item_class` = `item_class_2`, `cardborder` = `cardborder_0` (normal) / `_1` (foil), `Game` tag's `localized_tag_name` = game name, `market_fee_app` = the game's appid. Used by the "sets close to a badge" panel |
 | Encrypt | `POST /Api/ASF/Encrypt` body `{ "CryptoMethod": 2, "StringToEncrypt": "…" }` | not needed, see §3 |
 | Shut down | `POST /Api/ASF/Exit` | graceful stop before we kill the process |
 
@@ -138,6 +139,9 @@ protection.
 * `FarmingPreferences` flags: 1 FarmingPausedByDefault, 8 FarmPriorityQueueOnly (only games we put in
   the `fq` queue — used for "only the games I choose"), 16 SkipRefundableGames (on by default for us so
   farming never burns a game's 2-hour refund window), 32 SkipUnplayedGames.
+  Full list in 6.3.11.7 `BotConfig.cs`: 0 None, 1, 2 ShutdownOnFarmingFinished, 4 SendOnFarmingFinished, 8, 16, 32,
+  64 EnableRiskyCardsDiscovery, 256 AutoUnpackBoosterPacks. **128 AutoSteamSaleEvent is gone**: ASF no longer clears
+  the sale discovery queue, so SCMFARM only reminds the user (sale strip on the dashboard).
 * "Pause while I play": ASF already does this. When the user launches a game on the same account Steam
   takes the session away from ASF (`PlayingBlocked`, `IsPlayingPossible == false`) and ASF resumes when
   the user stops playing. The UI shows this state instead of inventing its own detection.

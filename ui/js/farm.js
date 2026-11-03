@@ -2,7 +2,7 @@
 // Numbers and enums are documented in docs/RESEARCH.md.
 import { api } from "./backend.js";
 
-export const BOT = "main";
+export const FIRST_BOT = "main"; // the first account's bot (0.1.x had only this one)
 export const INPUT = { None: 0, Login: 1, Password: 2, SteamGuard: 3, Parental: 4, TwoFactor: 5, QrCodeLogin: 8 };
 // EFarmingOrder values
 export const ORDERS = { fast: 3, most: 4, new: 13, any: 0 };
@@ -31,28 +31,78 @@ export async function asf(method, path, body) {
   return res.Result;
 }
 
-export async function getBot() {
+export async function getBot(bot) {
+  return (await getBots([bot]))[bot] ?? null;
+}
+
+/** One request for several bots: { name: bot }; bots ASF doesn't know are left out. */
+export async function getBots(names) {
+  if (!names.length) return {};
   try {
-    const r = await asf("GET", `/Api/Bot/${BOT}`);
-    return r?.[BOT] ?? null;
+    return (await asf("GET", `/Api/Bot/${names.map(encodeURIComponent).join(",")}`)) || {};
   } catch {
-    return null;
+    return {};
   }
 }
 
+// One ASF bot per Steam account; every helper takes the bot name.
 const quiet = (p) => p.catch(() => null); // e.g. "already running" when ASF started the bot itself
-export const saveBot = (cfg) => asf("POST", `/Api/Bot/${BOT}`, { BotConfig: cfg });
-export const sendInput = (type, value) => asf("POST", `/Api/Bot/${BOT}/Input`, { Type: type, Value: value });
-export const startBot = () => quiet(asf("POST", `/Api/Bot/${BOT}/Start`));
-export const stopBot = () => quiet(asf("POST", `/Api/Bot/${BOT}/Stop`));
+export const saveBot = (bot, cfg) => asf("POST", `/Api/Bot/${bot}`, { BotConfig: cfg });
+export const sendInput = (bot, type, value) => asf("POST", `/Api/Bot/${bot}/Input`, { Type: type, Value: value });
+export const startBot = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Start`));
+export const stopBot = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Stop`));
 // ASF deletes the bot's config and database, so the Steam sign-in token leaves this PC with it.
-export const deleteBot = () => quiet(asf("DELETE", `/Api/Bot/${BOT}`));
-export const pauseFarming = () => quiet(asf("POST", `/Api/Bot/${BOT}/Pause`, { Permanent: true, ResumeInSeconds: 0 }));
-export const resumeFarming = () => quiet(asf("POST", `/Api/Bot/${BOT}/Resume`));
+export const deleteBot = (bot) => quiet(asf("DELETE", `/Api/Bot/${bot}`));
+export const pauseFarming = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Pause`, { Permanent: true, ResumeInSeconds: 0 }));
+export const resumeFarming = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Resume`));
 export const command = (text) => asf("POST", "/Api/Command", { Command: text });
-export const farmNext = (appId) => command(`fqadd ${BOT} ${appId}`);
-export const skipGame = (appId) => command(`fbadd ${BOT} ${appId}`);
-export const queueGames = (ids) => (ids.length ? command(`fqadd ${BOT} ${ids.join(",")}`) : null);
+export const farmNext = (bot, appId) => command(`fqadd ${bot} ${appId}`);
+export const skipGame = (bot, appId) => command(`fbadd ${bot} ${appId}`);
+export const queueGames = (bot, ids) => (ids.length ? command(`fqadd ${bot} ${ids.join(",")}`) : null);
+
+// ------------------------------------------------------------------ card sets
+// ASF serialises SteamKit's protobuf classes; read a field whatever its casing.
+const field = (o, k) => o?.[k] ?? o?.[k.replace(/(^|_)(\w)/g, (_, _u, c) => c.toUpperCase())];
+
+/** Normal (not foil) trading cards in the bot's Steam inventory, per game: { appid: { name, classes: { classid: amount } } }. */
+export async function cardsByGame(bot) {
+  const inv = (await asf("GET", `/Api/Bot/${bot}/Inventory/753/6`))?.[bot] || {};
+  const games = new Map(); // classid -> [appid, game name]
+  for (const d of field(inv, "descriptions") || []) {
+    const tags = field(d, "tags") || [];
+    const tag = (cat) => field(tags.find((x) => field(x, "category") === cat), "internal_name");
+    if (tag("item_class") !== "item_class_2" || tag("cardborder") !== "cardborder_0") continue;
+    const app = Number(field(d, "market_fee_app")) || Number(String(field(d, "market_hash_name") || "").split("-")[0]);
+    const game = tags.find((x) => field(x, "category") === "Game");
+    if (app) games.set(String(field(d, "classid")), [app, field(game, "localized_tag_name") || ""]);
+  }
+  const out = {};
+  for (const a of field(inv, "assets") || []) {
+    const cls = String(field(a, "classid"));
+    const [app, name] = games.get(cls) || [];
+    if (!app) continue;
+    const per = (out[app] ||= { name, classes: {} });
+    per.classes[cls] = (per.classes[cls] || 0) + (Number(field(a, "amount")) || 1);
+  }
+  return out;
+}
+
+/**
+ * Sets the account is closest to finishing: [{ appid, name, have, size, missing, price, full }]. `sets` is the
+ * showcasemaker.com feed's { appid: [cards in set, whole set price in USD cents] }; price = the missing cards.
+ */
+export function nearSets(byGame, sets, limit = 30) {
+  const rows = [];
+  for (const [appid, { name, classes }] of Object.entries(byGame || {})) {
+    const [size, setPrice] = sets?.[appid] || [];
+    if (!size) continue;
+    const have = Math.min(size, Object.keys(classes).length);
+    const missing = size - have;
+    rows.push({ appid: Number(appid), name, have, size, missing, price: Math.round(((setPrice || 0) / size) * missing), full: !missing });
+  }
+  rows.sort((a, b) => a.missing - b.missing || a.price - b.price || b.size - a.size);
+  return rows.slice(0, limit);
+}
 
 /** App IDs from store links ("/app/620/") or bare numbers. */
 export function parseAppIds(text) {
@@ -116,10 +166,11 @@ export async function markLog() {
   return lines[lines.length - 1] ?? "";
 }
 
-export async function failureSince(mark) {
+// ASF log lines look like "date|process|LEVEL|<bot>|message": with several accounts only this bot's lines count.
+export async function failureSince(mark, bot) {
   const lines = await logLines();
   const from = mark ? lines.lastIndexOf(mark) + 1 : 0;
-  const fresh = lines.slice(from).join("\n");
+  const fresh = lines.slice(from).filter((l) => !bot || l.includes(`|${bot}|`)).join("\n");
   if (/InvalidPassword/.test(fresh)) return "password";
   if (/RateLimitExceeded|AccountLoginDeniedThrottle|AccountLogonDeniedVerifiedEmailRequired/.test(fresh)) return "rate";
   if (/TwoFactorCodeMismatch|InvalidLoginAuthCode/.test(fresh)) return "code";
@@ -151,6 +202,7 @@ export class SignIn {
   }
 
   async begin(settings, password) {
+    this.bot = settings.bot;
     this.cancel();
     this.qr = false;
     this.password = password;
@@ -162,11 +214,12 @@ export class SignIn {
     this.emit("connecting");
     await this.hooks.toHeadless();
     this.mark = await markLog();
-    await saveBot(botConfig(settings, { paused: true }));
+    await saveBot(this.bot, botConfig(settings, { paused: true }));
     this.loop();
   }
 
   async beginQr(settings) {
+    this.bot = settings.bot;
     this.cancel();
     this.settings = settings;
     this.qr = true;
@@ -179,22 +232,22 @@ export class SignIn {
     await this.hooks.toInteractive();
     this.mark = await markLog();
     // Disabled so ASF doesn't start it on its own before it knows we want the QR code.
-    await saveBot({ ...botConfig(settings, { paused: true }), Enabled: false });
-    for (let i = 0; i < 20 && !(await getBot()); i++) await new Promise((r) => setTimeout(r, 500));
+    await saveBot(this.bot, { ...botConfig(settings, { paused: true }), Enabled: false });
+    for (let i = 0; i < 20 && !(await getBot(this.bot)); i++) await new Promise((r) => setTimeout(r, 500));
     await this.askQr();
     this.loop();
   }
 
   async askQr() {
     this.qrTries++;
-    await sendInput(INPUT.QrCodeLogin, "Y");
-    await startBot();
+    await sendInput(this.bot, INPUT.QrCodeLogin, "Y");
+    await startBot(this.bot);
   }
 
   async cancelQr() {
     this.cancel();
     this.qr = false;
-    await stopBot();
+    await stopBot(this.bot);
     await this.hooks.toHeadless();
   }
 
@@ -203,7 +256,7 @@ export class SignIn {
       // Token saved; go back to headless with the normal (enabled) config and let the usual flow confirm it.
       this.qr = false;
       this.emit("connecting");
-      await saveBot(botConfig(this.settings, { paused: true }));
+      await saveBot(this.bot, botConfig(this.settings, { paused: true }));
       await this.hooks.toHeadless();
       this.startedAt = Date.now();
       this.kicked = false;
@@ -244,13 +297,13 @@ export class SignIn {
   async fail(reason) {
     this.cancel();
     this.password = null;
-    await stopBot(); // don't let ASF keep retrying a wrong password: Steam rate-limits that
+    await stopBot(this.bot); // don't let ASF keep retrying a wrong password: Steam rate-limits that
     this.emit("error", { reason });
   }
 
   /** Returns true when finished. */
   async tick() {
-    const b = await getBot();
+    const b = await getBot(this.bot);
     if (!b) {
       if (Date.now() - this.startedAt > 30000) await this.fail("generic");
       return !this.timer;
@@ -262,7 +315,7 @@ export class SignIn {
       this.emit("ok", { bot: b });
       return true;
     }
-    const reason = await failureSince(this.mark);
+    const reason = await failureSince(this.mark, this.bot);
     if (reason === "password" || reason === "rate") {
       await this.fail(reason);
       return true;
@@ -271,8 +324,8 @@ export class SignIn {
       case INPUT.Password:
         if (this.password && !this.passwordSent) {
           this.passwordSent = true;
-          await sendInput(INPUT.Password, this.password);
-          await startBot();
+          await sendInput(this.bot, INPUT.Password, this.password);
+          await startBot(this.bot);
           this.emit("connecting");
         } else if (!this.password) {
           this.emit("password");
@@ -294,7 +347,7 @@ export class SignIn {
     if (!b.KeepRunning) {
       if (!this.kicked) {
         this.kicked = true;
-        await startBot();
+        await startBot(this.bot);
       } else if (Date.now() - this.startedAt > 45000) {
         await this.fail(reason || "generic");
         return true;
@@ -307,8 +360,8 @@ export class SignIn {
   async submitCode(type, value) {
     this.codeSent = true;
     this.mark = await markLog();
-    await sendInput(type, value.trim());
-    await startBot();
+    await sendInput(this.bot, type, value.trim());
+    await startBot(this.bot);
     this.startedAt = Date.now();
     this.lastKey = null;
     this.emit("connecting");

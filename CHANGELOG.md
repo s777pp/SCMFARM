@@ -3,6 +3,36 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.2.0 — 2026-11-03
+
+### Added
+- **Several Steam accounts.** Each account is its own ASF bot (`main`, `acc2`, …). "Add account" (the `+` next to the
+  avatars, or the account menu) runs the sign-in and "what to farm" steps for a new account; the same login cannot be
+  added twice. Avatars in the title bar and tabs in the dashboard head switch the account; Settings edits the shown
+  one; Log out removes only that account. One IPC request polls all bots. 0.1.x settings move into the new list by
+  themselves, so nobody has to sign in again.
+- **Notifications**: a Windows notification when an account has collected all its cards or Steam asks for a
+  password or code (switch "Notify me"). Optional **Telegram** messages through the user's own bot: a short guide in the
+  app, token check, "Connect" finds the chat after the user presses Start, "Send a test", "Turn off" deletes the token
+  (`src-tauri/src/extras.rs`, `tauri-plugin-notification`).
+- **Sets close to a badge** (dashboard, right column): normal cards from the account's Steam inventory
+  (`GET /Api/Bot/<bot>/Inventory/753/6`) grouped per game, with set sizes and market prices from showcasemaker.com:
+  have/need, what is missing and roughly what it costs; a full set opens the badge page to craft it, the others open
+  the market filtered to that game's cards.
+- **Steam sales on the dashboard**: a strip a month before a seasonal sale and while it runs, with what to collect.
+- Switch **"Steam news from showcasemaker.com"**: at most one download a day of `/api/scmfarm/feed` (sale dates, set
+  sizes and prices), the same file for everyone, cached in the app data folder.
+
+### Changed
+- Options step: two compact columns so the seven options still fit 1180 x 760 in all eight languages; the level card
+  on the dashboard is smaller to make room for the sets panel.
+- README Privacy lists the new optional connections (feed, Telegram). RESEARCH.md: the inventory endpoint and the
+  `FarmingPreferences` flags of 6.3.11.7 (ASF no longer has `AutoSteamSaleEvent`).
+
+### Not verified yet
+- Real inventory JSON field names (the parser accepts snake_case and PascalCase), a real Windows toast from the
+  portable exe, a real Telegram bot, a second real account.
+
 ## 0.1.1 — 2026-11-03
 
 ### Changed (SignPath Foundation requirements)

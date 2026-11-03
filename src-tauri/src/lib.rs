@@ -1,4 +1,5 @@
 mod engine;
+mod extras;
 mod settings;
 mod system;
 mod updater;
@@ -22,6 +23,7 @@ pub fn run() {
         // A second launch (e.g. from the Start menu while we sit in the tray) just shows the window.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_main(app)))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--minimized"]),
@@ -86,6 +88,10 @@ pub fn run() {
             system::remove_from_pc,
             updater::update_check,
             updater::update_install,
+            extras::notify_toast,
+            extras::telegram_link,
+            extras::telegram_send,
+            extras::feed_get,
         ])
         .build(tauri::generate_context!())
         .expect("error while building SCMFARM");

@@ -66,6 +66,22 @@
     </form>
   </dialog>
 
+  <!-- The user's own Telegram bot for notifications: the token stays on this PC, messages go straight to Telegram. -->
+  <dialog id="tg" class="tg">
+    <h2 class="title title--sm"><span data-i18n="telegram.title"></span></h2>
+    <p data-i18n="telegram.lead"></p>
+    <ol class="tg__steps"></ol>
+    <label class="field"><span data-i18n="telegram.token"></span>
+      <input class="input" id="tgToken" autocomplete="off" spellcheck="false" placeholder="123456789:AA…"></label>
+    <div class="tg__bar">
+      <button class="btn btn--primary" type="button" data-action="tg-link" data-i18n="telegram.link"></button>
+      <button class="btn" type="button" data-action="tg-test" data-i18n="telegram.test"></button>
+      <button class="btn btn--quiet" type="button" data-action="tg-off" id="tgOff" data-i18n="telegram.off"></button>
+    </div>
+    <p id="tgStatus" hidden></p>
+    <form method="dialog"><button class="btn" data-i18n="app.close"></button></form>
+  </dialog>
+
   <dialog id="about">
     <h2 class="title title--sm"><span data-i18n="about.title"></span></h2>
     <p data-i18n="about.body"></p>

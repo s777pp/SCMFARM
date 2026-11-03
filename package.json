@@ -1,7 +1,7 @@
 {
   "name": "showcase-farm",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Steam trading card farming on your own PC, powered by ArchiSteamFarm",
   "license": "Apache-2.0",
   "scripts": {
