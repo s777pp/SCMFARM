@@ -133,6 +133,8 @@ export default {
     autostartHint: "Opens quietly in the tray and continues farming after a restart.",
     tray: "Keep farming when I close the window",
     trayHint: "The window hides to the tray. Right-click the tray icon to quit.",
+    updates: "Update SCMFARM automatically",
+    updatesHint: "At start the app asks showcasemaker.com whether a newer version exists (only the version number, no account data) and installs it after checking its signature.",
   },
   start: {
     eyebrow: "Step 5 · Ready",

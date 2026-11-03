@@ -133,6 +133,8 @@ export default {
     autostartHint: "Öffnet sich unauffällig im Infobereich und farmt nach einem Neustart weiter.",
     tray: "Weiterfarmen, wenn ich das Fenster schließe",
     trayHint: "Das Fenster verschwindet in den Infobereich. Rechtsklick auf das Symbol zum Beenden.",
+    updates: "SCMFARM automatisch aktualisieren",
+    updatesHint: "Beim Start fragt die App showcasemaker.com, ob es eine neuere Version gibt (nur die Versionsnummer, keine Kontodaten), und installiert sie nach Prüfung der Signatur.",
   },
   start: {
     eyebrow: "Schritt 5 · Bereit",

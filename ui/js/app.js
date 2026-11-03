@@ -314,6 +314,7 @@ const stepRenderers = {
         ${tg("awake", "keepAwake", !!S().keepAwake)}
         ${tg("autostart", "autostart", !!S().autostart)}
         ${tg("tray", "minimizeToTray", S().minimizeToTray !== false)}
+        ${tg("updates", "autoUpdate", S().autoUpdate !== false)}
       </div></div>${bar()}`;
   },
 
@@ -774,7 +775,7 @@ document.addEventListener("change", (e) => {
     renderStep();
   } else if (el.id === "skipRefundable") {
     state.settings.skipRefundable = el.checked;
-  } else if (["keepAwake", "autostart", "minimizeToTray"].includes(el.id)) {
+  } else if (["keepAwake", "autostart", "minimizeToTray", "autoUpdate"].includes(el.id)) {
     state.settings[el.id] = el.checked;
   }
 });
@@ -786,7 +787,7 @@ async function persistStep() {
   if (name === "what") {
     await saveSettings({ farmMode: s.farmMode || "all", order: s.order || "fast", chosenText: s.chosenText || "", skipRefundable: s.skipRefundable !== false });
   } else if (name === "options") {
-    await saveSettings({ keepAwake: !!s.keepAwake, autostart: !!s.autostart, minimizeToTray: s.minimizeToTray !== false });
+    await saveSettings({ keepAwake: !!s.keepAwake, autostart: !!s.autostart, minimizeToTray: s.minimizeToTray !== false, autoUpdate: s.autoUpdate !== false });
   }
 }
 
@@ -794,6 +795,12 @@ async function persistStep() {
 // At start: when showcasemaker.com lists a newer SCMFARM, download it (Rust checks the checksum and the release
 // signature), and the app restarts into it. Offline or no release yet: nothing happens.
 async function updateAtStart() {
+  // The update check is the only request to showcasemaker.com; the user can switch it off in the options step.
+  if (S().autoUpdate === false) {
+    state.appVersion = await api.appVersion().catch(() => "");
+    $("#aboutVersion").textContent = state.appVersion ? t("about.version", { v: state.appVersion }) : "";
+    return;
+  }
   const r = await api.updateCheck().catch(() => null);
   state.appVersion = r?.current || "";
   $("#aboutVersion").textContent = state.appVersion ? t("about.version", { v: state.appVersion }) : "";

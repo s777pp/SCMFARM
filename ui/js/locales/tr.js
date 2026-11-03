@@ -133,6 +133,8 @@ export default {
     autostartHint: "Sessizce sistem tepsisinde açılır ve yeniden başlatmadan sonra toplamaya devam eder.",
     tray: "Pencereyi kapatınca toplamaya devam et",
     trayHint: "Pencere sistem tepsisine gizlenir. Çıkmak için simgeye sağ tıkla.",
+    updates: "SCMFARM'ı otomatik güncelle",
+    updatesHint: "Uygulama açılışta showcasemaker.com'a daha yeni bir sürüm olup olmadığını sorar (yalnızca sürüm numarası, hesap verisi yok) ve imzasını doğruladıktan sonra kurar.",
   },
   start: {
     eyebrow: "Adım 5 · Hazır",

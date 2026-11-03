@@ -3,6 +3,16 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.1.1 — 2026-11-03
+
+### Changed (SignPath Foundation requirements)
+- **Switch "Update SCMFARM automatically"** in the Options step (on by default; all 8 languages): the update check is
+  the app's only request to showcasemaker.com, the wizard explains it and it can be turned off. With it off the app
+  reads its version locally. Options are laid out in two columns so the step still fits 1180 x 760.
+- README "Code signing policy": the SignPath credit with links, roles named (@s777pp), review rule for pull requests,
+  application status. Release notes now link the code signing policy and the privacy statement.
+- showcasemaker.com/scmfarm shows "Code signing policy" and privacy links (site repo).
+
 ## 0.1.0 — 2026-11-03 (first public release, unsigned)
 
 Released from CI: https://github.com/s777pp/SCMFARM/releases/tag/v0.1.0, mirrored at showcasemaker.com/download/scmfarm.

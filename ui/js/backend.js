@@ -26,6 +26,7 @@ function realBackend() {
     setAutostart: (enabled) => invoke("set_autostart", { enabled }),
     openExternal: (url) => invoke("open_external", { url }),
     updateCheck: () => invoke("update_check"),
+    appVersion: () => tauri.app.getVersion(),
     async updateInstall(onProgress) {
       const unlisten = await tauri.event.listen("update-progress", (e) => onProgress(e.payload));
       try {
@@ -196,6 +197,9 @@ function mockBackend() {
       window.open(url, "_blank", "noopener");
     },
     // ?update=1 in the preview URL shows the update screen (it "fails" at the end, the demo cannot restart).
+    async appVersion() {
+      return "0.1.1";
+    },
     async updateCheck() {
       const demo = new URLSearchParams(location.search).has("update");
       return { current: "0.1.0", latest: demo ? "0.2.0" : "0.1.0", available: demo };

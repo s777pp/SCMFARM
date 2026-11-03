@@ -250,7 +250,9 @@ textarea.input{height:auto;min-height:110px;padding:12px 14px;font-family:var(--
 .sub{margin-top:26px;font-size:var(--ui-text-sm);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-cyan-hi)}
 
 /* toggles */
-.toggles{display:grid;gap:10px;margin-top:22px;max-width:720px}
+/* Two columns: five options (incl. the fixed "pause when I play" on its own row) fit 1180 x 760 without a scrollbar. */
+.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px;max-width:980px}
+.toggles .toggle--fixed{grid-column:1/-1}
 .toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 20px;align-items:center;padding:16px 18px;border:1px solid var(--ui-line);border-radius:var(--ui-r-xl);background:var(--ui-inset);cursor:pointer}
 .toggle b{font-weight:800;color:#fff}
 .toggle small{grid-column:1;color:var(--ui-muted);font-size:var(--ui-text-sm);line-height:1.45}

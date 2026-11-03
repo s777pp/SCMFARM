@@ -133,6 +133,8 @@ export default {
     autostartHint: "S'ouvre discrètement dans la zone de notification et reprend le farm après un redémarrage.",
     tray: "Continuer à farmer quand je ferme la fenêtre",
     trayHint: "La fenêtre se cache dans la zone de notification. Clic droit sur l'icône pour quitter.",
+    updates: "Mettre à jour SCMFARM automatiquement",
+    updatesHint: "Au démarrage, l'application demande à showcasemaker.com s'il existe une version plus récente (seulement le numéro de version, aucune donnée de compte) et l'installe après avoir vérifié sa signature.",
   },
   start: {
     eyebrow: "Étape 5 · Prêt",

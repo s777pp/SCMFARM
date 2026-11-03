@@ -133,6 +133,8 @@ export default {
     autostartHint: "Se abre discretamente en la bandeja y sigue farmeando tras reiniciar.",
     tray: "Seguir farmeando al cerrar la ventana",
     trayHint: "La ventana se oculta en la bandeja. Clic derecho en el icono para salir.",
+    updates: "Actualizar SCMFARM automáticamente",
+    updatesHint: "Al iniciar, la app pregunta a showcasemaker.com si hay una versión más nueva (solo el número de versión, sin datos de la cuenta) y la instala tras comprobar su firma.",
   },
   start: {
     eyebrow: "Paso 5 · Listo",

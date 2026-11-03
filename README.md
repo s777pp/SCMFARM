@@ -129,16 +129,17 @@ both folders and the exe itself, then quits.
 * Network connections the app makes: Steam (by ASF, for signing in and farming), GitHub (one-time download
   of the pinned ASF release), Steam's image CDN (game pictures and the avatar on the dashboard), and
   showcasemaker.com once per start to check for a newer SCMFARM (only the version check and the download; no
-  account data, no identifiers).
+  account data, no identifiers). The first-run wizard says so and has a switch "Update SCMFARM automatically"
+  (Settings → Options) that turns this request off.
   The "showcasemaker.com" button only opens the site in the user's browser.
 * ASF's optional remote features (joining its Steam group, public trade listing, self-update, bad-bot list)
   are switched off by the app.
 
 ## Code signing policy
 
-Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
-*(Signing is planned for the first public release; until then the exe from CI is unsigned.)*
+*(Applied to SignPath Foundation in November 2026; until the project is accepted, the exe from CI is unsigned.)*
 
 * Only `SCMFARM.exe` files built by the GitHub Actions workflow in this repository from a tagged commit are signed.
 * Every component is open source under an OSI-approved licence: SCMFARM (Apache-2.0), ArchiSteamFarm
@@ -149,9 +150,10 @@ Team roles:
 
 | Role | Who |
 |---|---|
-| Authors (committers) | Project owner (showcasemaker.com) |
-| Reviewers | Project owner (showcasemaker.com) |
-| Approvers (approve each signing request) | Project owner (showcasemaker.com) |
+| Committers and reviewers | [@s777pp](https://github.com/s777pp) (owner of showcasemaker.com) |
+| Approvers (approve each signing request) | [@s777pp](https://github.com/s777pp) |
+
+Changes from anyone outside this list (pull requests) are reviewed by a committer before they are merged.
 
 The privacy statement for signed releases is the [Privacy](#privacy) section above.
 

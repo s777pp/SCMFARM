@@ -133,6 +133,8 @@ export default {
     autostartHint: "Abre discretamente na bandeja e continua o farm depois de reiniciar.",
     tray: "Continuar farmando ao fechar a janela",
     trayHint: "A janela vai para a bandeja. Clique com o botão direito no ícone para sair.",
+    updates: "Atualizar o SCMFARM automaticamente",
+    updatesHint: "Ao iniciar, o app pergunta ao showcasemaker.com se há uma versão mais nova (só o número da versão, sem dados da conta) e a instala depois de verificar a assinatura.",
   },
   start: {
     eyebrow: "Passo 5 · Pronto",

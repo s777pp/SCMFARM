@@ -88,3 +88,6 @@ jobs:
             src-tauri/target/release/SCMFARM.exe
             latest.json
           generate_release_notes: true
+          body: |
+            Download: [showcasemaker.com/scmfarm](https://showcasemaker.com/en/scmfarm) or `SCMFARM.exe` below.
+            [Code signing policy](https://github.com/s777pp/SCMFARM#code-signing-policy) · [Privacy](https://github.com/s777pp/SCMFARM#privacy)

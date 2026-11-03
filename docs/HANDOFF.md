@@ -36,6 +36,8 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
   the latest.json signature verifies with `RELEASE_PUBLIC_KEY`.
 - showcasemaker.com mirrors it (VPS `.env`: `SCMFARM_REPO=s777pp/SCMFARM`): `/api/scmfarm/latest` answers 0.1.0,
   `/download/scmfarm` serves the exe.
+- SignPath Foundation: application sent 2026-11-03 (category Gaming, privacy URL = README#privacy). On approval: API token
+  as secret SIGNPATH_API_TOKEN, uncomment the SignPath step in the workflow, point the release at the signed file.
 - Private signing key: GitHub secret `RELEASE_KEY`; owner's copy outside any repo. Next release: bump the version in
   the three files, commit, tag `vX.Y.Z`, push branch and tag.
 
