@@ -138,10 +138,12 @@ mod tests {
 
     #[test]
     fn tokens() {
-        assert!(valid_token("123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"));
+        // Built at run time so no token-shaped literal sits in the source (secret scanners flag those).
+        let secret = "x".repeat(35);
+        assert!(valid_token(&format!("123456789:{secret}")));
         assert!(!valid_token("123456789:short"));
-        assert!(!valid_token("abc:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"));
-        assert!(!valid_token("123:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw/../x"));
+        assert!(!valid_token(&format!("abc:{secret}")));
+        assert!(!valid_token(&format!("123:{secret}/../x")));
         assert!(!valid_token(""));
     }
 
