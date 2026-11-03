@@ -19,7 +19,7 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 | Wizard + dashboard | `ui/js/app.js` |
 | ASF logic: bot config, sign-in state machine (password, codes, QR), status, XP math | `ui/js/farm.js` |
 | Tauri bridge + demo mock | `ui/js/backend.js` |
-| Texts | `ui/js/locales/en.js`, `ru.js` |
+| Texts | `ui/js/locales/<lang>.js`: en ru de tr fr uk es pt |
 | Runtime data on the user's PC | `%APPDATA%\com.showcasemaker.farm\` (`settings.json`, `asf\` with `config\main.json`, `main.db` token, `log.txt`) |
 
 ## Key decisions (why it is built this way)
@@ -33,7 +33,7 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 
 ## Next steps
 1. Test with a real account (QR and password flows, farming, pause/resume, skip, farm next). Fix what breaks.
-2. Stage 2: several accounts; the six remaining languages; a Windows Job object so ASF always dies with the
+2. Stage 2: several accounts; a Windows Job object so ASF always dies with the
    app; QR re-login directly from the dashboard; maybe "tap Approve" sign-in (needs non-headless ASF with a
    stdin pipe answering the DeviceConfirmation prompt).
 3. Stage 3: push to GitHub, first CI build, first public release, then apply to SignPath Foundation and add

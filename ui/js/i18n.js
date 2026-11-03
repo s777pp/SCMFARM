@@ -1,20 +1,26 @@
-// UI strings. en and ru are complete; the other site languages are registered so adding one is a single
-// file in locales/ plus `ready: true` here. Missing keys always fall back to English.
+// UI strings in the eight languages of showcasemaker.com, one file per language in locales/.
+// Missing keys always fall back to English.
 import en from "./locales/en.js";
 import ru from "./locales/ru.js";
+import de from "./locales/de.js";
+import tr from "./locales/tr.js";
+import fr from "./locales/fr.js";
+import uk from "./locales/uk.js";
+import es from "./locales/es.js";
+import pt from "./locales/pt.js";
 
 export const LANGS = [
   { code: "en", name: "English", ready: true },
   { code: "ru", name: "Русский", ready: true },
-  { code: "de", name: "Deutsch", ready: false },
-  { code: "tr", name: "Türkçe", ready: false },
-  { code: "fr", name: "Français", ready: false },
-  { code: "uk", name: "Українська", ready: false },
-  { code: "es", name: "Español", ready: false },
-  { code: "pt", name: "Português", ready: false },
+  { code: "de", name: "Deutsch", ready: true },
+  { code: "tr", name: "Türkçe", ready: true },
+  { code: "fr", name: "Français", ready: true },
+  { code: "uk", name: "Українська", ready: true },
+  { code: "es", name: "Español", ready: true },
+  { code: "pt", name: "Português", ready: true },
 ];
 
-const DICTS = { en, ru };
+const DICTS = { en, ru, de, tr, fr, uk, es, pt };
 let current = "en";
 
 export function detectLang(saved) {
@@ -22,8 +28,8 @@ export function detectLang(saved) {
   if (saved && ok(saved)) return saved;
   const nav = (navigator.language || "en").slice(0, 2).toLowerCase();
   if (ok(nav)) return nav;
-  // Belarusian / Kazakh / Ukrainian users get Russian until their language is ready.
-  if (["be", "kk", "uk"].includes(nav)) return "ru";
+  // Belarusian and Kazakh users get Russian.
+  if (["be", "kk"].includes(nav)) return "ru";
   return "en";
 }
 

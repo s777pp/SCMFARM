@@ -31,7 +31,7 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 
 | Path | What |
 |---|---|
-| `ui/` | The whole interface: `index.html`, `css/` (tokens copied from the site), `js/app.js` (wizard + dashboard), `js/farm.js` (ASF logic), `js/backend.js` (Tauri bridge + demo mock), `js/locales/` (en, ru) |
+| `ui/` | The whole interface: `index.html`, `css/` (tokens copied from the site), `js/app.js` (wizard + dashboard), `js/farm.js` (ASF logic), `js/backend.js` (Tauri bridge + demo mock), `js/locales/` (en ru de tr fr uk es pt) |
 | `src-tauri/src/engine.rs` | Download/verify/unpack ASF, start/stop it, IPC proxy, log tail |
 | `src-tauri/src/settings.rs` | App settings file, autostart, opening links |
 | `src-tauri/src/lib.rs` | Tray icon, close-to-tray, single instance, cleanup on exit |

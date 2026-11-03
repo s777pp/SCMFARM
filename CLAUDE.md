@@ -9,8 +9,8 @@ Read first: `docs/HANDOFF.md` (current state and next steps), `CHANGELOG.md`, `d
   `licenses/`, ASF itself runs **unmodified**.
 - Never send the user's Steam password anywhere but the local ASF process; never write it to disk.
   No telemetry without explicit consent.
-- UI texts are our own words (never copy other sites). Languages: en, ru done; de tr fr uk es pt planned
-  (`ui/js/i18n.js` registry, one file per language in `ui/js/locales/`).
+- UI texts are our own words (never copy other sites). Languages: all eight of the site (en ru de tr fr uk es pt), one file per language in
+  `ui/js/locales/`, registry in `ui/js/i18n.js`. A new text needs all eight files (same keys, same `{placeholders}`).
 - Design comes from the site (`ui/css/tokens.css` copied from the showcasemaker.com repo,
   `static/css/tokens.css` there). The site repo is read-only from here.
 - Every component must stay OSI-licensed (SignPath Foundation signing requirement). Release binaries only

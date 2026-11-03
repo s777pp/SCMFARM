@@ -5,6 +5,13 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 
 ## Unreleased (0.1.0 prototype) — 2026-11-03
 
+### Added (languages)
+- **All eight languages of showcasemaker.com**: German, Turkish, French, Ukrainian, Spanish and Portuguese join
+  English and Russian (`ui/js/locales/*.js`, 174 texts each, same placeholders; Steam's own names such as
+  Steam Guard and Family View in each language). Ukrainian systems now get Ukrainian instead of Russian.
+- Every wizard step and the dashboard checked in all eight at 1180 x 760: no scrollbar, nothing cut off
+  (French step name shortened to "Le principe"; step 1 a few px tighter).
+
 ### Added (accounts)
 - **Account avatars in the title bar** (left of the language menu): avatar with a green dot when connected; click
   opens a menu with name, login, status and **Log out**. Name and avatar are remembered in `settings.json`
