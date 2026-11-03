@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Showcase Farm</title>
+  <link rel="icon" href="img/icon.svg">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand"><img src="img/icon.svg" alt=""><b>Showcase</b><span>Farm</span></div>
+      <div class="chip" id="engineChip" data-tone="busy"><i></i><span data-i18n="engine.checking"></span></div>
+      <div class="top__right">
+        <span class="demo-badge" id="demoBadge" data-i18n="app.demo" hidden></span>
+        <button class="btn btn--sm" id="btnSettings" data-i18n="app.settings" hidden></button>
+        <select class="lang" id="lang" aria-label="Language"></select>
+      </div>
+    </header>
+    <main id="view"></main>
+    <footer class="foot">
+      <button class="link" id="btnAbout" data-i18n="app.poweredBy"></button>
+      <span>· Apache-2.0</span>
+      <span class="spacer"></span>
+      <span>showcasemaker.com</span>
+    </footer>
+  </div>
+
+  <dialog id="about">
+    <h2 class="title title--sm"><span data-i18n="about.title"></span></h2>
+    <p data-i18n="about.body"></p>
+    <p data-i18n="about.license"></p>
+    <p data-i18n="about.privacy"></p>
+    <p id="aboutEngine"></p>
+    <p><button class="link" data-href="https://github.com/JustArchiNET/ArchiSteamFarm" data-i18n="about.repo"></button></p>
+    <form method="dialog"><button class="btn" data-i18n="app.close"></button></form>
+  </dialog>
+</body>
+</html>

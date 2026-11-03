@@ -1,0 +1,59 @@
+/* Design tokens copied from showcasemaker.com (static/css/tokens.css, 2026-10-16) so the app looks like
+   the site. Keep names in sync with the site; app-only values go to app.css. */
+
+@font-face{
+  font-family:'Montserrat';font-style:normal;font-display:swap;font-weight:100 900;
+  src:url(../fonts/montserrat-cyrillic-wght-normal.woff2) format('woff2-variations');
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+}
+@font-face{
+  font-family:'Montserrat';font-style:normal;font-display:swap;font-weight:100 900;
+  src:url(../fonts/montserrat-latin-wght-normal.woff2) format('woff2-variations');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root{
+  --ui-bg:#03070a;
+  --ui-cyan:#1fc9f1;            --ui-cyan-rgb:31 201 241;
+  --ui-cyan-hi:#6fe3ff;
+  --ui-violet:#8a7dff;          --ui-violet-rgb:138 125 255;
+  --ui-ink:#e9f3ff;
+  --ui-ink-strong:#f4f9ff;
+  --ui-muted:rgba(214,229,250,.68);
+  --ui-faint:rgba(200,214,238,.46);
+  --ui-on-accent:#041019;
+  --ui-line:rgba(110,170,255,.2);
+  --ui-line-hi:rgba(111,227,255,.55);
+  --ui-good:#5ff2b5;
+  --ui-warn:#ffd66b;
+  --ui-bad:#ff9aaa;
+
+  --ui-panel:linear-gradient(160deg,rgba(12,22,52,.82),rgba(5,10,28,.92));
+  --ui-pop:linear-gradient(180deg,#0e1a3c,#050a1c);
+  --ui-inset:rgba(5,10,28,.88);
+  --ui-field:#060d24;
+  --ui-accent:linear-gradient(135deg,var(--ui-cyan),var(--ui-violet));
+  --ui-accent-line:linear-gradient(90deg,var(--ui-cyan),var(--ui-violet));
+
+  --ui-font:'Montserrat',system-ui,sans-serif;
+  --ui-font-code:Consolas,'Cascadia Mono',ui-monospace,monospace;
+  --ui-text-xs:12px;
+  --ui-text-sm:13px;
+  --ui-text-md:14px;
+  --ui-text-lg:16px;
+  --ui-text-xl:20px;
+  --ui-text-2xl:28px;
+
+  --ui-r-sm:8px;
+  --ui-r-md:10px;
+  --ui-r-lg:12px;
+  --ui-r-xl:14px;
+  --ui-r-2xl:18px;
+  --ui-r-pill:999px;
+
+  --ui-shadow-md:0 20px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);
+  --ui-glow:0 16px 36px rgba(31,201,241,.32);
+  --ui-ring:0 0 0 3px rgba(31,201,241,.35);
+  --ui-ease:cubic-bezier(.22,.61,.36,1);
+  --ui-fast:.16s;
+}

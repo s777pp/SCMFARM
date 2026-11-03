@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1a3c"/>
+      <stop offset="1" stop-color="#050a1c"/>
+    </linearGradient>
+    <linearGradient id="ac" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1fc9f1"/>
+      <stop offset="1" stop-color="#8a7dff"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="200" fill="url(#bg)"/>
+  <rect x="32" y="32" width="960" height="960" rx="200" fill="none" stroke="#1fc9f1" stroke-opacity=".45" stroke-width="16"/>
+  <!-- back card -->
+  <rect x="250" y="250" width="380" height="520" rx="44" fill="#0a1330" stroke="#6fe3ff" stroke-opacity=".55" stroke-width="18" transform="rotate(-12 440 510)"/>
+  <!-- front card -->
+  <rect x="390" y="230" width="380" height="520" rx="44" fill="url(#ac)" transform="rotate(8 580 490)"/>
+  <!-- sprout -->
+  <g transform="rotate(8 580 490)" fill="none" stroke="#041019" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M580 640 V470"/>
+    <path d="M580 520 C580 440 520 410 470 410 C470 470 510 520 580 520"/>
+    <path d="M580 480 C580 400 640 370 690 370 C690 430 650 480 580 480"/>
+  </g>
+</svg>
