@@ -147,6 +147,11 @@ function mockBackend() {
         }
         return ok({ main: true });
       }
+      if (!action && method === "DELETE") {
+        bot = null;
+        password = code = null;
+        return ok({ main: true });
+      }
       if (!action) return ok(bot ? { main: view() } : {});
       if (!bot) return fail("Bot not found");
       if (action === "Input") {

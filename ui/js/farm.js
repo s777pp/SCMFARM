@@ -45,6 +45,8 @@ export const saveBot = (cfg) => asf("POST", `/Api/Bot/${BOT}`, { BotConfig: cfg 
 export const sendInput = (type, value) => asf("POST", `/Api/Bot/${BOT}/Input`, { Type: type, Value: value });
 export const startBot = () => quiet(asf("POST", `/Api/Bot/${BOT}/Start`));
 export const stopBot = () => quiet(asf("POST", `/Api/Bot/${BOT}/Stop`));
+// ASF deletes the bot's config and database, so the Steam sign-in token leaves this PC with it.
+export const deleteBot = () => quiet(asf("DELETE", `/Api/Bot/${BOT}`));
 export const pauseFarming = () => quiet(asf("POST", `/Api/Bot/${BOT}/Pause`, { Permanent: true, ResumeInSeconds: 0 }));
 export const resumeFarming = () => quiet(asf("POST", `/Api/Bot/${BOT}/Resume`));
 export const command = (text) => asf("POST", "/Api/Command", { Command: text });

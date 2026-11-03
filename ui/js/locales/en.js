@@ -8,6 +8,7 @@ export default {
     back: "Back",
     next: "Next",
     close: "Close",
+    cancel: "Cancel",
   },
   engine: {
     checking: "Checking the farm engine…",
@@ -46,6 +47,16 @@ export default {
     calcLevel: "Your Steam level",
     calcResult: "Next slot at level {next}: about {badges} badges ({xp} XP) away.",
     calcNote: "One more showcase slot every 10 levels.",
+  },
+  account: {
+    menu: "Account",
+    online: "connected",
+    offline: "not connected",
+    logout: "Log out",
+    logoutNote: "Farming stops and the sign-in is removed from this PC.",
+    logoutTitle: "Log out of {name}?",
+    leaving: "Logging out and removing the sign-in from this PC…",
+    logoutConfirm: "Farming stops and the Steam sign-in is removed from this PC. To farm again you will sign in once more.",
   },
   signin: {
     eyebrow: "Step 2 · Steam account",

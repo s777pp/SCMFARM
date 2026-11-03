@@ -47,6 +47,11 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 - Layout targets the default 1180 x 760 window with no scrollbar: check every wizard step and the dashboard at that
   size after UI changes (`npm run preview`, viewport 1180 x 760).
 
+## Accounts (2026-11-03)
+- `accounts()` in app.js builds the title bar list from `settings.account` + the live bot; still one ASF bot
+  `main`. Several accounts = several bots: give each a name, loop `accounts()` over them, keep `deleteBot(name)`.
+- Log out = `stopBot()` + `deleteBot()` (ASF deletes config + .db) + clear `login` / `account` / `wizardDone`.
+
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - `zip` crate is pinned to 2.x on purpose (API used in `engine.rs`).

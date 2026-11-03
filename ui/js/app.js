@@ -1,7 +1,7 @@
 import { api, isDemo } from "./backend.js";
 import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
 import {
-  INPUT, SignIn, botConfig, botStatus, farmNext, getBot, nextSlot, parseAppIds, pauseFarming, queueGames,
+  INPUT, SignIn, botConfig, botStatus, deleteBot, farmNext, getBot, nextSlot, parseAppIds, pauseFarming, queueGames,
   resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot,
 } from "./farm.js";
 
@@ -23,6 +23,7 @@ const state = {
   bot: null,
   loggedOnSince: 0,
   dashInputError: null,
+  accountOpen: null, // login whose account menu is open
 };
 
 // ------------------------------------------------------------------ settings
@@ -109,6 +110,96 @@ function renderChrome() {
   $("#btnSettings").hidden = state.mode !== "dash";
   $("#aboutEngine").textContent = t("about.engine", { v: "ArchiSteamFarm 6.3.11.7" });
   renderEngineChip();
+  renderAccounts(true);
+}
+
+// ------------------------------------------------------------------ accounts (title bar)
+// Accounts signed in on this PC. One ASF bot ("main") for now; the list and the menu already work per account.
+function accounts() {
+  const a = S().account;
+  if (!a || !S().login) return [];
+  const b = state.bot;
+  return [{
+    login: S().login,
+    name: b?.Nickname || a.name || S().login,
+    avatar: b?.AvatarHash ?? a.avatar ?? null,
+    online: !!b?.IsConnectedAndLoggedOn,
+  }];
+}
+
+/** Remembers name and avatar once Steam has signed the account in, so the title bar shows them on the next start. */
+async function rememberAccount(b) {
+  if (!b?.IsConnectedAndLoggedOn) return;
+  const a = S().account || {};
+  if (a.name === (b.Nickname || "") && a.avatar === (b.AvatarHash || null)) return;
+  await saveSettings({ account: { name: b.Nickname || "", avatar: b.AvatarHash || null } });
+  renderAccounts(true);
+}
+
+let accountsKey = "";
+function renderAccounts(force) {
+  const box = $("#accounts");
+  const list = accounts();
+  const key = JSON.stringify([list, state.accountOpen, getLang()]);
+  if (!force && key === accountsKey) return;
+  accountsKey = key;
+  box.hidden = !list.length;
+  const open = list.find((a) => a.login === state.accountOpen);
+  box.innerHTML = list.map((a) => `<button type="button" class="acc${a.login === state.accountOpen ? " is-open" : ""}" data-account="${esc(a.login)}"
+      title="${esc(a.name)}" aria-label="${esc(t("account.menu"))}: ${esc(a.name)}" aria-haspopup="menu" aria-expanded="${a.login === state.accountOpen}">
+      <img src="${esc(avatarUrl(a.avatar))}" alt=""><i class="acc__dot" data-on="${a.online}"></i></button>`).join("")
+    + (open ? `<div class="acc__menu" role="menu">
+      <div class="acc__head"><img src="${esc(avatarUrl(open.avatar))}" alt="">
+        <div><b>${esc(open.name)}</b><small><i class="acc__dot" data-on="${open.online}"></i>${esc(open.login)} · ${esc(t(open.online ? "account.online" : "account.offline"))}</small></div></div>
+      <button type="button" class="acc__item acc__item--danger" role="menuitem" data-action="logout" data-login="${esc(open.login)}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></svg>
+        ${esc(t("account.logout"))}</button>
+      <small class="acc__note">${esc(t("account.logoutNote"))}</small></div>` : "");
+}
+
+/** Yes / no question in the app's own window; resolves true for yes. */
+function ask(title, text, yesLabel) {
+  const d = $("#ask");
+  $(".ask__title", d).textContent = title;
+  $(".ask__text", d).textContent = text;
+  $("#askYes").textContent = yesLabel;
+  applyI18n(d);
+  d.showModal();
+  $("#askYes").focus();
+  // Answer straight from the buttons (and Esc), not from the dialog's "close" event, which can arrive late.
+  return new Promise((resolve) => {
+    const answer = (yes) => (e) => {
+      e?.preventDefault();
+      d.close();
+      resolve(yes);
+    };
+    $("#askYes").onclick = answer(true);
+    $(".ask__bar [value=no]", d).onclick = answer(false);
+    d.oncancel = answer(false);
+  });
+}
+
+async function logout() {
+  const a = accounts()[0];
+  state.accountOpen = null;
+  renderAccounts();
+  if (!(await ask(t("account.logoutTitle", { name: a?.name || S().login || "" }), t("account.logoutConfirm"), t("account.logout")))) return;
+  state.accountOpen = null;
+  clearInterval(pollTimer);
+  signIn.cancel();
+  // Show at once that we are leaving: stopping the bot and deleting its files takes a few seconds.
+  await saveSettings({ wizardDone: false, login: "", account: null });
+  state.bot = null;
+  state.loggedOnSince = 0;
+  state.mode = "wizard";
+  state.signin = { kind: "leaving" };
+  state.step = 1;
+  state.maxStep = 1;
+  render();
+  await stopBot();
+  await deleteBot();
+  state.signin = { kind: "form" };
+  render();
 }
 
 function render() {
@@ -176,6 +267,8 @@ const stepRenderers = {
         </div></form>`;
     } else if (si.kind === "qr") {
       body = qrBox(si.url);
+    } else if (si.kind === "leaving") {
+      body = `<div class="spinner">${esc(t("account.leaving"))}</div>`;
     } else if (si.kind === "connecting") {
       body = `<div class="spinner">${esc(t("signin.connecting"))}</div>`;
     } else if (si.kind === "email" || si.kind === "app" || si.kind === "parental") {
@@ -183,7 +276,8 @@ const stepRenderers = {
     } else if (si.kind === "ok") {
       const b = si.bot || {};
       body = `<div class="who"><img class="avatar" src="${esc(avatarUrl(b.AvatarHash))}" alt="">
-        <div><b>${esc(t("signin.signedIn", { name: b.Nickname || S().login }))}</b><p>${esc(t("signin.signedInLead"))}</p></div></div>
+        <div><b>${esc(t("signin.signedIn", { name: b.Nickname || S().login }))}</b><p>${esc(t("signin.signedInLead"))}</p></div>
+        <button class="btn btn--sm btn--quiet" type="button" data-action="logout">${esc(t("account.logout"))}</button></div>
         <p style="margin-top:14px"><button class="link" data-action="signin-reset">${esc(t("signin.another"))}</button></p>`;
     }
     return `<div class="step__body">${head("signin")}${body}</div>${bar({ nextOk: si.kind === "ok" })}`;
@@ -302,7 +396,11 @@ async function goto(step) {
 const signIn = new SignIn(
   (st) => {
     state.signin = st;
-    if (st.kind === "ok") state.loggedOnSince = Date.now();
+    if (st.kind === "ok") {
+      state.loggedOnSince = Date.now();
+      state.bot = st.bot;
+      rememberAccount(st.bot);
+    }
     if (state.mode === "wizard") renderStep();
   },
   { toInteractive: () => engineMode(true), toHeadless: () => engineMode(false) },
@@ -514,6 +612,8 @@ async function pollOnce() {
   if (b?.IsConnectedAndLoggedOn) state.loggedOnSince ||= Date.now();
   else state.loggedOnSince = 0;
   if (state.mode === "dash") updateDash();
+  rememberAccount(b);
+  renderAccounts();
 }
 function startPolling() {
   clearInterval(pollTimer);
@@ -556,13 +656,14 @@ document.addEventListener("click", async (e) => {
     state.maxStep = STEPS.length - 1;
     render();
   } else if (a === "engine-retry") bootEngine().catch(() => {});
+  else if (a === "logout") logout();
   else if (a === "pause") { await pauseFarming(); pollOnce(); }
   else if (a === "resume") { await resumeFarming(); pollOnce(); }
   else if (a === "stop") { await stopBot(); pollOnce(); }
   else if (a === "start-bot") { await startBot(); pollOnce(); }
   else if (a === "farm-next") { await farmNext(el.dataset.app).catch(console.warn); pollOnce(); }
   else if (a === "skip") {
-    if (confirm(t("dash.skipConfirm", { name: el.dataset.name }))) {
+    if (await ask(t("dash.skip"), t("dash.skipConfirm", { name: el.dataset.name }), t("dash.skip"))) {
       await skipGame(el.dataset.app).catch(console.warn);
       pollOnce();
     }
@@ -596,8 +697,22 @@ $(".lang__menu", langBox).addEventListener("click", async (e) => {
   await saveSettings({ lang: b.dataset.lang });
   render();
 });
-document.addEventListener("pointerdown", (e) => { if (!langBox.contains(e.target)) langMenu(false); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") langMenu(false); });
+document.addEventListener("pointerdown", (e) => {
+  if (!langBox.contains(e.target)) langMenu(false);
+  if (state.accountOpen && !$("#accounts").contains(e.target)) { state.accountOpen = null; renderAccounts(); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  langMenu(false);
+  if (state.accountOpen) { state.accountOpen = null; renderAccounts(); }
+});
+$("#accounts").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-account]");
+  if (!b) return;
+  langMenu(false);
+  state.accountOpen = state.accountOpen === b.dataset.account ? null : b.dataset.account;
+  renderAccounts();
+});
 
 // ------------------------------------------------------------------ window frame
 // The window has no Windows frame (tauri.conf.json "decorations": false): the top bar is the title bar.
@@ -625,6 +740,7 @@ if (appWindow) {
 }
 
 document.addEventListener("submit", (e) => {
+  if (e.target.method === "dialog") return; // <dialog> forms close their dialog themselves
   e.preventDefault();
   const f = e.target;
   if (f.id === "signinForm") onSignInSubmit(f);

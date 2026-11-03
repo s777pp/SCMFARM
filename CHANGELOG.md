@@ -5,6 +5,16 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 
 ## Unreleased (0.1.0 prototype) — 2026-11-03
 
+### Added (accounts)
+- **Account avatars in the title bar** (left of the language menu): avatar with a green dot when connected; click
+  opens a menu with name, login, status and **Log out**. Name and avatar are remembered in `settings.json`
+  (`account`), so they show at the next start before Steam connects. Built as a list, ready for several accounts.
+- **Log out** (title bar menu, and a button on the "signed in" card of step 2): asks in the app's own window, stops
+  the bot and deletes it through ASF (`DELETE /Api/Bot/main`: ASF removes the bot's config and database, so the
+  Steam sign-in token leaves the PC), clears the login and goes back to the sign-in step.
+- **Own yes / no window** (`ask()` in app.js) instead of the WebView's `confirm()`, also for "skip this game".
+- Fixed: the global form handler blocked `<dialog>` forms, so "About" could not be closed with its button.
+
 ### Changed (owner feedback after the first launch)
 - **Name: SCMFARM** (was "Showcase Farm"): window title, tray, installer (`SCMFARM_<ver>_x64-setup.exe`),
   texts, docs. Identifier `com.showcasemaker.farm` and the data folder stay the same, so nothing is lost.
