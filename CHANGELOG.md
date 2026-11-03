@@ -3,7 +3,9 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
-## Unreleased (0.1.0 prototype) — 2026-11-03
+## 0.1.0 — 2026-11-03 (first public release, unsigned)
+
+Released from CI: https://github.com/s777pp/SCMFARM/releases/tag/v0.1.0, mirrored at showcasemaker.com/download/scmfarm.
 
 ### Changed (distribution)
 - **One portable `SCMFARM.exe`, no installer** (`bundle.active: false`). Licences are built into the exe

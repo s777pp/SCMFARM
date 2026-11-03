@@ -31,6 +31,14 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 - Farming options map to ASF config: `FarmingOrders`, `FarmingPreferences` (SkipRefundableGames,
   FarmPriorityQueueOnly for "only chosen games"), `RemoteCommunication: 0`.
 
+## Release status (2026-11-03)
+- Public repo https://github.com/s777pp/SCMFARM (branch `main`). v0.1.0 released by CI from tag `v0.1.0`;
+  the latest.json signature verifies with `RELEASE_PUBLIC_KEY`.
+- showcasemaker.com mirrors it (VPS `.env`: `SCMFARM_REPO=s777pp/SCMFARM`): `/api/scmfarm/latest` answers 0.1.0,
+  `/download/scmfarm` serves the exe.
+- Private signing key: GitHub secret `RELEASE_KEY`; owner's copy outside any repo. Next release: bump the version in
+  the three files, commit, tag `vX.Y.Z`, push branch and tag.
+
 ## Next steps
 1. Test with a real account (QR and password flows, farming, pause/resume, skip, farm next). Fix what breaks.
 2. Stage 2: several accounts; a Windows Job object so ASF always dies with the
