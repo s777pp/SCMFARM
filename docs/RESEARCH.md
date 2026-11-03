@@ -162,7 +162,7 @@ protection.
   in our app; (b) we do not modify ASF files, so no "changed files" notices are needed; (c) keep ASF's
   copyright/attribution — the About screen says "Powered by ArchiSteamFarm (Apache-2.0) by JustArchi"
   with a link to the repo. Trademark: Apache-2.0 §6 grants no trademark rights, so the app is called
-  **Showcase Farm**, never "ASF"; ASF is only mentioned as the engine.
+  **SCMFARM**, never "ASF"; ASF is only mentioned as the engine.
 * Wiki statements: the IPC page says the ASF API "can be used to make your own helper scripts, tools,
   GUIs and alike" and is officially supported. The FAQ says Apache-2.0 "allows other developers to further
   integrate ASF with their own projects" but that such projects are not reviewed/authorised by the ASF team

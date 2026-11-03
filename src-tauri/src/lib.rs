@@ -24,11 +24,11 @@ pub fn run() {
         ))
         .manage(engine::Engine::default())
         .setup(|app| {
-            let show = MenuItem::with_id(app, "show", "Showcase Farm", true, None::<&str>)?;
+            let show = MenuItem::with_id(app, "show", "SCMFARM", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit / Выход", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;
             let mut tray = TrayIconBuilder::with_id("main")
-                .tooltip("Showcase Farm")
+                .tooltip("SCMFARM")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -80,7 +80,7 @@ pub fn run() {
             settings::open_external,
         ])
         .build(tauri::generate_context!())
-        .expect("error while building Showcase Farm");
+        .expect("error while building SCMFARM");
 
     app.run(|app, event| {
         // Never leave a hidden ASF process behind.

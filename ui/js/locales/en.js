@@ -1,6 +1,6 @@
 export default {
   app: {
-    name: "Showcase Farm",
+    name: "SCMFARM",
     demo: "Demo mode — no real Steam connection",
     poweredBy: "Powered by ArchiSteamFarm",
     about: "About",
@@ -33,7 +33,7 @@ export default {
     eyebrow: "Step 1 · The basics",
     title1: "Cards drop",
     title2: "while you rest",
-    lead: "Steam gives trading cards for time spent in games you own. Showcase Farm keeps those games \"running\" in the background — nothing is downloaded or installed — so the cards drop without you playing.",
+    lead: "Steam gives trading cards for time spent in games you own. SCMFARM keeps those games \"running\" in the background — nothing is downloaded or installed — so the cards drop without you playing.",
     f1t: "Paid games only",
     f1: "Cards drop from games you bought that have trading cards. Free games and giveaway copies usually drop nothing.",
     f2t: "About half a set",
@@ -89,7 +89,7 @@ export default {
     eyebrow: "Step 3 · What to farm",
     title1: "Pick",
     title2: "your games",
-    lead: "Showcase Farm finds every game on your account that still has card drops left.",
+    lead: "SCMFARM finds every game on your account that still has card drops left.",
     all: "All games with drops left",
     allHint: "Recommended. New purchases are picked up automatically.",
     chosen: "Only games I choose",
@@ -173,8 +173,8 @@ export default {
   },
   time: { d: "d", h: "h", m: "min", soon: "less than a minute" },
   about: {
-    title: "About Showcase Farm",
-    body: "Showcase Farm is a free helper from showcasemaker.com. It runs the open-source ArchiSteamFarm engine by JustArchi on your PC, unmodified, and gives it a simple window.",
+    title: "About SCMFARM",
+    body: "SCMFARM is a free helper from showcasemaker.com. It runs the open-source ArchiSteamFarm engine by JustArchi on your PC, unmodified, and gives it a simple window.",
     license: "ArchiSteamFarm is licensed under the Apache License 2.0. A copy of the licence is included with this app.",
     privacy: "No telemetry. Your Steam password never leaves this PC except to Steam itself.",
     repo: "ArchiSteamFarm on GitHub",

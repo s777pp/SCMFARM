@@ -5,6 +5,20 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 
 ## Unreleased (0.1.0 prototype) — 2026-11-03
 
+### Changed (owner feedback after the first launch)
+- **Name: SCMFARM** (was "Showcase Farm"): window title, tray, installer (`SCMFARM_<ver>_x64-setup.exe`),
+  texts, docs. Identifier `com.showcasemaker.farm` and the data folder stay the same, so nothing is lost.
+- **Icons from showcasemaker.com**: the site's white S with an arrow on its navy tile
+  (`src-tauri/icons/*`, `ui/img/logo.png`), made from the site's `static/icon.png`.
+- **Looks like an app, not a page**: no Windows frame (`decorations: false`); the top bar is our own title bar
+  (drag to move, double-click to maximise, min / max / close buttons, close still goes to the tray);
+  full-height step sidebar, the step text and the buttons bar fill the window, a status bar at the bottom;
+  no text selection or browser right-click menu outside text fields; thin app scrollbars.
+- **Default window 1180 x 760** (min 980 x 660); every wizard step and the dashboard fit without a scrollbar
+  (only the game queue scrolls inside its panel; the "Steam asks for the password again" box is one row now).
+- **Language menu** in the app's style (globe, current language, list with codes) instead of the system select.
+- **showcasemaker.com** in the status bar is a link.
+
 ### Added
 - **QR sign-in** via the Steam Mobile app (no password). ASF allows QR only outside Headless mode, so the
   engine is restarted non-headless for the sign-in and back to headless after Steam issues the token.

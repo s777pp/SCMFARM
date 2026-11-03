@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Showcase Farm</title>
-  <link rel="icon" href="img/icon.svg">
+  <title>SCMFARM</title>
+  <link rel="icon" href="img/logo.png">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/app.css">
   <script src="vendor/qrcode.js"></script>
@@ -12,13 +12,26 @@
 </head>
 <body>
   <div class="app">
-    <header class="top">
-      <div class="brand"><img src="img/icon.svg" alt=""><b>Showcase</b><span>Farm</span></div>
+    <!-- Our own title bar (the window has no Windows frame): drag to move, double-click to maximise. -->
+    <header class="top" id="titlebar">
+      <div class="brand"><img src="img/logo.png" alt=""><b>SCM<span>FARM</span></b></div>
       <div class="chip" id="engineChip" data-tone="busy"><i></i><span data-i18n="engine.checking"></span></div>
       <div class="top__right">
         <span class="demo-badge" id="demoBadge" data-i18n="app.demo" hidden></span>
         <button class="btn btn--sm" id="btnSettings" data-i18n="app.settings" hidden></button>
-        <select class="lang" id="lang" aria-label="Language"></select>
+        <div class="lang" id="lang">
+          <button class="lang__btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></svg>
+            <span class="lang__name"></span>
+            <svg class="lang__chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <ul class="lang__menu" role="listbox" hidden></ul>
+        </div>
+      </div>
+      <div class="wc" id="winCtl" hidden>
+        <button type="button" data-win="min" aria-label="Minimize"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 6.5h8" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button type="button" data-win="max" aria-label="Maximize"><svg class="wc__max" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><svg class="wc__restore" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><rect x="2" y="4" width="6" height="6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 4V3a1 1 0 0 1 1-1H9a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1H8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button type="button" data-win="close" class="wc__close" aria-label="Close"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
       </div>
     </header>
     <main id="view"></main>
@@ -26,7 +39,7 @@
       <button class="link" id="btnAbout" data-i18n="app.poweredBy"></button>
       <span>· Apache-2.0</span>
       <span class="spacer"></span>
-      <span>showcasemaker.com</span>
+      <button class="link link--site" data-href="https://showcasemaker.com">showcasemaker.com</button>
     </footer>
   </div>
 

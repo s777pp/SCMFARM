@@ -3,5 +3,12 @@
   "identifier": "default",
   "description": "Main window: core events/window APIs. App commands are registered in lib.rs.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-close"
+  ]
 }

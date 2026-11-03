@@ -10,7 +10,7 @@ const STEPS = ["intro", "signin", "what", "options", "start"];
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const capsule = (id) => `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${Number(id)}/header.jpg`;
-const avatarUrl = (hash) => (hash ? `https://avatars.akamai.steamstatic.com/${encodeURIComponent(hash)}_full.jpg` : "img/icon.svg");
+const avatarUrl = (hash) => (hash ? `https://avatars.akamai.steamstatic.com/${encodeURIComponent(hash)}_full.jpg` : "img/logo.png");
 
 const state = {
   settings: {},
@@ -100,9 +100,10 @@ function renderEngineChip() {
 // ------------------------------------------------------------------ chrome
 function renderChrome() {
   applyI18n();
-  const sel = $("#lang");
-  sel.innerHTML = LANGS.filter((l) => l.ready)
-    .map((l) => `<option value="${l.code}"${l.code === getLang() ? " selected" : ""}>${esc(l.name)}</option>`)
+  const ready = LANGS.filter((l) => l.ready);
+  $("#lang .lang__name").textContent = (ready.find((l) => l.code === getLang()) || ready[0]).name;
+  $("#lang .lang__menu").innerHTML = ready
+    .map((l) => `<li><button type="button" role="option" data-lang="${l.code}" aria-selected="${l.code === getLang()}"><span>${esc(l.name)}</span><small>${l.code.toUpperCase()}</small></button></li>`)
     .join("");
   $("#demoBadge").hidden = !isDemo;
   $("#btnSettings").hidden = state.mode !== "dash";
@@ -120,10 +121,10 @@ function render() {
 function renderWizard() {
   $("#view").innerHTML = `
     <div class="wiz">
-      <nav class="rail panel" aria-label="Steps"><ol>
+      <nav class="rail" aria-label="Steps"><ol>
         ${STEPS.map((s, i) => `<li><button data-action="goto" data-step="${i}" class="${i === state.step ? "is-on" : i <= state.maxStep ? "is-done" : ""}"${i <= state.maxStep ? "" : " disabled"}>${esc(t(`steps.${s}`))}</button></li>`).join("")}
       </ol></nav>
-      <section class="panel step" id="step"></section>
+      <section class="step" id="step"></section>
     </div>`;
   renderStep();
 }
@@ -169,7 +170,7 @@ const stepRenderers = {
           <input class="input" type="password" name="password" id="password" autocomplete="current-password" required></label>
         ${si.kind === "error" ? `<div class="error">${esc(t(`signin.err_${si.reason || "generic"}`))}</div>` : ""}
         <div class="note">${esc(t("signin.privacy"))}</div>
-        <div class="step__bar" style="border:0;padding-top:0">
+        <div class="form-actions">
           <button class="btn btn--primary" type="submit"${ready ? "" : " disabled"}>${esc(t("signin.submit"))}</button>
           <button class="btn" type="button" data-action="signin-qr"${ready ? "" : " disabled"}>${esc(t("signin.qrButton"))}</button>
           ${ready ? "" : `<span class="spinner" style="margin:0">${esc(t(`engine.${state.engine.phase === "error" ? "failed" : state.engine.phase}`, { pct: state.engine.pct }))}</span>`}
@@ -390,7 +391,7 @@ function renderDash() {
       <section class="panel dash__head" id="dHead"></section>
       <section class="panel attention" id="dInput" hidden></section>
       <div class="dash__grid">
-        <div style="display:grid;gap:18px;align-content:start">
+        <div class="dash__main">
           <section class="panel now" id="dNow"></section>
           <section class="panel stats" id="dStats"></section>
           <section class="panel queue" id="dQueue"></section>
@@ -449,11 +450,11 @@ function updateDash() {
   const need = b?.RequiredInput;
   if (need === INPUT.Password) {
     if (inputBox.dataset.need !== "2") {
-      inputBox.innerHTML = `<form id="dashPassword"><p class="label">${esc(t("dash.needPassword"))}</p>
-        <label class="field"><span>${esc(t("signin.password"))}</span><input class="input" type="password" name="password" required></label>
-        <button class="btn btn--primary" style="margin-top:12px" type="submit">${esc(t("dash.passwordSubmit"))}</button>
-        <button class="btn" style="margin-top:12px" type="button" data-action="relogin">${esc(t("signin.qrButton"))}</button></form>
-        <div class="note">${esc(t("signin.privacy"))}</div>`;
+      inputBox.innerHTML = `<form id="dashPassword" class="attention__form"><p class="label">${esc(t("dash.needPassword"))}</p>
+        <div class="attention__row"><input class="input" type="password" name="password" placeholder="${esc(t("signin.password"))}" aria-label="${esc(t("signin.password"))}" required>
+        <button class="btn btn--primary" type="submit">${esc(t("dash.passwordSubmit"))}</button>
+        <button class="btn" type="button" data-action="relogin">${esc(t("signin.qrButton"))}</button></div>
+        <small>${esc(t("signin.privacy"))}</small></form>`;
     }
   } else if ([INPUT.SteamGuard, INPUT.TwoFactor, INPUT.Parental].includes(need)) {
     const kind = { [INPUT.SteamGuard]: "email", [INPUT.TwoFactor]: "app", [INPUT.Parental]: "parental" }[need];
@@ -572,11 +573,51 @@ $("#btnSettings").addEventListener("click", () => {
   render();
 });
 $("#btnAbout").addEventListener("click", () => $("#about").showModal());
-$("#lang").addEventListener("change", async (e) => {
-  setLang(e.target.value);
-  await saveSettings({ lang: e.target.value });
+
+// ------------------------------------------------------------------ language menu
+const langBox = $("#lang");
+function langMenu(open) {
+  langBox.classList.toggle("is-open", open);
+  $(".lang__btn", langBox).setAttribute("aria-expanded", String(open));
+  $(".lang__menu", langBox).hidden = !open;
+}
+$(".lang__btn", langBox).addEventListener("click", () => langMenu(!langBox.classList.contains("is-open")));
+$(".lang__menu", langBox).addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-lang]");
+  if (!b) return;
+  langMenu(false);
+  if (b.dataset.lang === getLang()) return;
+  setLang(b.dataset.lang);
+  await saveSettings({ lang: b.dataset.lang });
   render();
 });
+document.addEventListener("pointerdown", (e) => { if (!langBox.contains(e.target)) langMenu(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") langMenu(false); });
+
+// ------------------------------------------------------------------ window frame
+// The window has no Windows frame (tauri.conf.json "decorations": false): the top bar is the title bar.
+const appWindow = window.__TAURI__?.window?.getCurrentWindow?.();
+if (appWindow) {
+  $("#winCtl").hidden = false;
+  document.documentElement.classList.add("is-app");
+  const syncMax = async () => document.documentElement.classList.toggle("is-max", await appWindow.isMaximized());
+  $("#winCtl").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-win]");
+    if (!b) return;
+    if (b.dataset.win === "min") appWindow.minimize();
+    else if (b.dataset.win === "max") appWindow.toggleMaximize();
+    else appWindow.close(); // goes to the tray when that option is on (lib.rs)
+  });
+  $("#titlebar").addEventListener("mousedown", (e) => {
+    if (e.button !== 0 || e.target.closest("button,input,select,a,.lang,.wc")) return;
+    if (e.detail === 2) appWindow.toggleMaximize();
+    else appWindow.startDragging();
+  });
+  appWindow.onResized(syncMax);
+  syncMax();
+  // An app, not a page: no browser menu on right click (text fields keep theirs).
+  document.addEventListener("contextmenu", (e) => { if (!e.target.closest("input,textarea")) e.preventDefault(); });
+}
 
 document.addEventListener("submit", (e) => {
   e.preventDefault();

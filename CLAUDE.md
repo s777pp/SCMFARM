@@ -1,11 +1,11 @@
-# Showcase Farm — notes for Claude sessions
+# SCMFARM — notes for Claude sessions
 
 Read first: `docs/HANDOFF.md` (current state and next steps), `CHANGELOG.md`, `docs/RESEARCH.md` (how ASF is used).
 
 ## Owner and rules
 - The owner runs showcasemaker.com (Steam profile showcase tools) and speaks Russian: **talk to them in
   Russian**; code, comments, commit messages and docs in English.
-- Product name is **Showcase Farm**, never "ASF". Say "Powered by ArchiSteamFarm". Keep ASF's licence in
+- Product name is **SCMFARM**, never "ASF". Say "Powered by ArchiSteamFarm". Keep ASF's licence in
   `licenses/`, ASF itself runs **unmodified**.
 - Never send the user's Steam password anywhere but the local ASF process; never write it to disk.
   No telemetry without explicit consent.
@@ -21,7 +21,7 @@ Read first: `docs/HANDOFF.md` (current state and next steps), `CHANGELOG.md`, `d
 ## Build
 - Toolchain on the owner's PC: Rust stable (rustup, `%USERPROFILE%\.cargo\bin` — add to PATH in new shells),
   MSVC Build Tools 2022, Node 24.
-- `npm run build` → `src-tauri/target/release/bundle/nsis/Showcase Farm_<ver>_x64-setup.exe`;
+- `npm run build` → `src-tauri/target/release/bundle/nsis/SCMFARM_<ver>_x64-setup.exe`;
   `npm run dev` for a dev window; `npm run preview` → UI in a browser with a mock engine (demo mode).
 - Claude's auto-mode refuses to launch the built app (it downloads and runs ASF), so live tests are done by
   the owner; ask them for `%APPDATA%\com.showcasemaker.farm\asf\log.txt` when something fails.

@@ -18,4 +18,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end("not found");
   }
-}).listen(port, "127.0.0.1", () => console.log(`Showcase Farm UI preview: http://127.0.0.1:${port}`));
+}).listen(port, "127.0.0.1", () => console.log(`SCMFARM UI preview: http://127.0.0.1:${port}`));

@@ -1,4 +1,4 @@
-# Showcase Farm
+# SCMFARM
 
 A desktop app for Windows that farms Steam trading cards **on the user's own PC**, made by
 [showcasemaker.com](https://showcasemaker.com). A step-by-step wizard replaces console windows and config files.
@@ -10,7 +10,7 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 ## How it works
 
 ```
- Showcase Farm window (HTML/CSS/JS in WebView2)
+ SCMFARM window (HTML/CSS/JS in WebView2)
         │  Tauri commands (src-tauri/src/*.rs)
         ▼
  Rust side ── downloads ASF-win-x64.zip (pinned 6.3.11.7, SHA-512 checked) into %APPDATA%\com.showcasemaker.farm\asf
@@ -92,7 +92,7 @@ GitHub-hosted Windows runner for every push to `main`, every pull request and ev
 a workflow artifact. Release binaries are only ever taken from these CI runs, never from a developer's PC.
 `scripts/check-version.mjs` runs first and fails the build if `package.json`, `src-tauri/tauri.conf.json`,
 `src-tauri/Cargo.toml` and the release tag disagree on the version, or if the product name is not
-"Showcase Farm". Commit `src-tauri/Cargo.lock` after the first build so CI builds are reproducible.
+"SCMFARM". Commit `src-tauri/Cargo.lock` after the first build so CI builds are reproducible.
 
 To release: bump the version in all three files, commit, tag `vX.Y.Z`, push the tag.
 
@@ -105,7 +105,7 @@ Quit the app from the tray first so the engine is stopped.
 
 ## Privacy
 
-* Showcase Farm has **no telemetry, analytics or crash reporting**. If anything like that is ever added, it
+* SCMFARM has **no telemetry, analytics or crash reporting**. If anything like that is ever added, it
   will be off until the user explicitly agrees.
 * The Steam login and password are used only to sign in to Steam through the local ASF process
   (127.0.0.1). The password is never written to disk and never sent to showcasemaker.com or anyone else.
@@ -123,7 +123,7 @@ Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 *(Signing is planned for the first public release; until then installers from CI are unsigned.)*
 
 * Only installers built by the GitHub Actions workflow in this repository from a tagged commit are signed.
-* Every component is open source under an OSI-approved licence: Showcase Farm (Apache-2.0), ArchiSteamFarm
+* Every component is open source under an OSI-approved licence: SCMFARM (Apache-2.0), ArchiSteamFarm
   (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1), qrcode-generator (MIT).
   There are no proprietary parts and no commercial dual licensing.
 
@@ -148,7 +148,7 @@ The privacy statement for signed releases is the [Privacy](#privacy) section abo
 
 ## Licences
 
-* Showcase Farm: **Apache License 2.0** — [LICENSE](LICENSE), attributions in [NOTICE](NOTICE).
+* SCMFARM: **Apache License 2.0** — [LICENSE](LICENSE), attributions in [NOTICE](NOTICE).
 * ArchiSteamFarm: Apache License 2.0 — `licenses/ArchiSteamFarm-LICENSE.txt`; the downloaded ASF folder also
   keeps its own `LICENSE.txt`. ASF has no NOTICE file. The About dialog credits ASF and links to its repository.
 * Montserrat: SIL Open Font License 1.1 — `licenses/Montserrat-OFL.txt`.

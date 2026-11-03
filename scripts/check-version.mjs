@@ -15,8 +15,8 @@ if (unique.size !== 1) {
   console.error("Version mismatch:", versions);
   process.exit(1);
 }
-if (conf.productName !== "Showcase Farm") {
-  console.error(`productName must be "Showcase Farm", got "${conf.productName}"`);
+if (conf.productName !== "SCMFARM") {
+  console.error(`productName must be "SCMFARM", got "${conf.productName}"`);
   process.exit(1);
 }
-console.log(`Showcase Farm ${pkg.version}: versions consistent`, versions);
+console.log(`SCMFARM ${pkg.version}: versions consistent`, versions);

@@ -39,6 +39,14 @@ Last updated 2026-11-03. History of changes: `CHANGELOG.md`.
 3. Stage 3: push to GitHub, first CI build, first public release, then apply to SignPath Foundation and add
    their GitHub Action; auto-update; download page on showcasemaker.com.
 
+## Window and look (2026-11-03)
+- No Windows frame (`tauri.conf.json` `decorations: false`, `shadow: true`): `#titlebar` in `ui/index.html` is the
+  title bar; `ui/js/app.js` "window frame" block drags it (`startDragging`), double-click maximises, `#winCtl` buttons
+  call minimize / toggleMaximize / close; permissions in `src-tauri/capabilities/default.json`. In the browser demo
+  the buttons are hidden (no Tauri).
+- Layout targets the default 1180 x 760 window with no scrollbar: check every wizard step and the dashboard at that
+  size after UI changes (`npm run preview`, viewport 1180 x 760).
+
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - `zip` crate is pinned to 2.x on purpose (API used in `engine.rs`).
