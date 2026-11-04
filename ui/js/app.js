@@ -1,8 +1,8 @@
 import { api, isDemo } from "./backend.js";
 import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
 import {
-  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, nearSets, nextSlot,
-  parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot,
+  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, isWaking, kickFarming, nearSets, nextSlot,
+  parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
 } from "./farm.js";
 
 const SITE = "https://showcasemaker.com";
@@ -24,6 +24,7 @@ const state = {
   draft: null, // the account the wizard is setting up or editing (saved to settings.accounts by "Start farming")
   bots: {}, // ASF bot name -> last bot object from ASF
   loggedOnSince: {}, // bot -> ms
+  wake: {}, // bot -> wakeStep state (getting ASF farming again after the user played)
   seen: {}, // bot -> { status, input } from the previous poll, for notifications
   cards: {}, // bot -> { at, games, err } (inventory for the sets panel)
   feed: null, // showcasemaker.com feed: sales + set sizes/prices (null when off or offline)
@@ -648,7 +649,7 @@ function updateDash() {
   if (!$("#dHead")) return;
   const bot = cur()?.bot;
   const b = botOf(bot);
-  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot] });
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]) });
   const cf = b?.CardsFarmer || {};
   const toFarm = cf.GamesToFarm || [];
   const current = cf.CurrentGamesFarming?.[0] || null;
@@ -659,7 +660,7 @@ function updateDash() {
     <div class="who-inline"><img class="avatar" src="${esc(avatarUrl(b?.AvatarHash ?? cur()?.avatar))}" alt="">
       <div><b>${esc(nameOf(bot))}</b><div class="status" data-s="${status}"><i></i>${esc(t(`dash.status_${status}`))}</div></div></div>
     ${others.length ? `<div class="tabs" role="tablist">${accountsList().map((a) => {
-      const st = botStatus(botOf(a.bot), { loggedOnSince: state.loggedOnSince[a.bot] });
+      const st = botStatus(botOf(a.bot), { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]) });
       return `<button type="button" role="tab" class="tab${a.bot === bot ? " is-on" : ""}" data-action="switch-account" data-bot="${esc(a.bot)}" aria-selected="${a.bot === bot}">
         <img src="${esc(avatarUrl(botOf(a.bot)?.AvatarHash ?? a.avatar))}" alt=""><span>${esc(nameOf(a.bot))}</span><i class="status__dot" data-s="${st}"></i></button>`;
     }).join("")}</div>` : ""}
@@ -847,7 +848,7 @@ function notify(kind, bot) {
 }
 
 function watchForNews(bot, b) {
-  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot] });
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]) });
   const input = b?.RequiredInput || 0;
   const prev = state.seen[bot];
   // "farmed": this account farmed since SCMFARM started; right after the last card ASF shows "scanning" for a while.
@@ -870,6 +871,8 @@ async function pollOnce() {
     state.bots[a.bot] = b;
     if (b?.IsConnectedAndLoggedOn) state.loggedOnSince[a.bot] ||= Date.now();
     else state.loggedOnSince[a.bot] = 0;
+    state.wake[a.bot] = wakeStep(state.wake[a.bot], b);
+    if (state.wake[a.bot].kick) kickFarming(a.bot).catch((e) => console.warn("wake", e));
     watchForNews(a.bot, b);
     rememberAccount(a.bot, b);
   }

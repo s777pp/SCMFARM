@@ -142,7 +142,7 @@ export function nextSlot(level) {
 }
 
 // ------------------------------------------------------------------ status
-export function botStatus(b, { loggedOnSince } = {}) {
+export function botStatus(b, { loggedOnSince, waking } = {}) {
   if (!b) return "stopped";
   if (b.RequiredInput) return "input";
   if (!b.KeepRunning) return "stopped";
@@ -154,7 +154,44 @@ export function botStatus(b, { loggedOnSince } = {}) {
   if (cf.GamesToFarm?.length) return "farming";
   // Right after login ASF still reads the badge pages.
   if (loggedOnSince && Date.now() - loggedOnSince < 3 * 60 * 1000) return "scanning";
+  if (waking) return "scanning"; // after the user played: SCMFARM is getting ASF going again (wakeStep)
   return "done";
+}
+
+// ------------------------------------------------------------------ waking ASF after the user played
+// ASF 6.3.11.7 can stay idle for hours after the user plays a game on the same account. While Steam keeps logging
+// ASF off (LoggedInElsewhere), its farming pass marks the remaining games "cannot be played now" for an hour and
+// ends with "nothing to farm"; when the account becomes free, CardsFarmer.Resume(false) skips the badge scan
+// (ShouldResumeFarming is false) and ASF waits for its IdleFarmingPeriod timer. Pause + Resume through IPC runs
+// Resume(true), which always scans. So once the account has been free and idle for a while, SCMFARM does that, a few
+// times, because the hour-long ignore can still be running.
+export const WAKE = { after: 2 * 60 * 1000, every: 15 * 60 * 1000, tries: 6 };
+
+/**
+ * One poll of one bot. `w` is the previous result ({} at first): { cards, blocked, free, kicked, tries }.
+ * Returns the next one; `kick: true` means "pause and resume farming now". `waking` = an episode is open.
+ */
+export function wakeStep(w, b, now = Date.now()) {
+  w = w || {};
+  const cf = b?.CardsFarmer || {};
+  if (!b || !b.KeepRunning || cf.Paused) return {}; // stopped or paused by the user: their call
+  if (!b.IsConnectedAndLoggedOn || b.RequiredInput) return { ...w, kick: false }; // reconnecting, often while playing
+  const hasGames = !!(cf.CurrentGamesFarming?.length || cf.GamesToFarm?.length);
+  if (!b.IsPlayingPossible) return { cards: w.cards || hasGames, blocked: true };
+  if (hasGames) return { cards: true };
+  if (!w.blocked || !w.cards) return {}; // idle without a game in between: ASF has really finished
+  const free = w.free || now;
+  if (now - free < WAKE.after || (w.kicked && now - w.kicked < WAKE.every)) return { ...w, free, kick: false };
+  if ((w.tries || 0) >= WAKE.tries) return {}; // nothing came back: the cards are really done
+  return { ...w, free, kicked: now, tries: (w.tries || 0) + 1, kick: true };
+}
+
+export const isWaking = (w) => !!(w?.blocked && w?.cards);
+
+// Not permanent, so it is not the user's "Pause" button; Resume then calls CardsFarmer.Resume(true).
+export async function kickFarming(bot) {
+  await quiet(asf("POST", `/Api/Bot/${bot}/Pause`, { Permanent: false, ResumeInSeconds: 0 }));
+  await resumeFarming(bot);
 }
 
 // ------------------------------------------------------------------ log reasons

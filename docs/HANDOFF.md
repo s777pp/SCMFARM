@@ -79,6 +79,13 @@ Last updated 2026-11-03 (0.2.0). History of changes: `CHANGELOG.md`.
   or code outside the wizard.
 - Sets panel: `cardsByGame()` + `nearSets()` in farm.js; inventory re-read at most every 30 min or by its reload button.
 
+## Waking ASF after the user played (0.2.2)
+- ASF 6.3.11.7 may sit idle for hours after the user plays on the same account (details in RESEARCH.md §4, "Pause
+  while I play"). `wakeStep` in `farm.js` runs on every poll per bot: "had cards, was playing, now free and idle" ->
+  after 2 min a non-permanent Pause + Resume (`kickFarming`), then every 15 min, at most 6 times. Status shows
+  "scanning" meanwhile. Live check by the owner: play a game for a while during farming, quit, and see farming come
+  back within ~3 minutes (or within ~1 h 15 min if the games were set aside for an hour).
+
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - `zip` crate is pinned to 2.x on purpose (API used in `engine.rs`).

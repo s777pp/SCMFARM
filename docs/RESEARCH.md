@@ -145,6 +145,12 @@ protection.
 * "Pause while I play": ASF already does this. When the user launches a game on the same account Steam
   takes the session away from ASF (`PlayingBlocked`, `IsPlayingPossible == false`) and ASF resumes when
   the user stops playing. The UI shows this state instead of inventing its own detection.
+  **Except it often does not resume** (6.3.11.7 source, 2026-11-05): while Steam keeps logging ASF off, `Farm()`
+  runs `IsPlayableGame` and games whose app data cannot be read get ignored for `HoursToIgnore` (1 h); the next badge
+  scan then finds nothing, `ShouldResumeFarming = false`, and `CheckOccupationStatus` calls `CardsFarmer.Resume(false)`,
+  which returns without `StartFarming` (no scan). Only the `IdleFarmingPeriod` timer, `OnNewGameAdded` or a user
+  resume (`Actions.Resume` -> `Resume(true)`, only when `Paused`) scans again. SCMFARM's `wakeStep` does a
+  non-permanent Pause + Resume after the account is free (see CHANGELOG 0.2.2).
 
 ## 5. Facts for the wizard texts
 

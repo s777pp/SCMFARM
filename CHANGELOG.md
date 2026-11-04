@@ -3,6 +3,18 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.2.2 — 2026-11-05
+
+### Fixed
+- **Farming did not come back after the user played a game** on the same account (seen in a real log: 7 games and
+  28 cards left, ASF idle for hours). While the user plays, Steam logs ASF off every minute (LoggedInElsewhere); ASF's
+  farming pass then marks the remaining games "cannot be played now" for an hour, ends with "nothing to farm", and
+  when the account is free again `CardsFarmer.Resume(false)` skips the badge scan, so ASF waits for its
+  `IdleFarmingPeriod` timer. SCMFARM now notices "was playing, had cards, now free and idle" and, after 2 minutes,
+  pauses and resumes farming through IPC (that runs `Resume(true)`, which always scans), again every 15 minutes, at
+  most 6 times. Meanwhile the account shows "looking for games with drops" instead of "done", and no false
+  "farming finished" notification is sent. `wakeStep` / `kickFarming` in `ui/js/farm.js`.
+
 ## 0.2.1 — 2026-11-04
 
 ### Fixed
