@@ -150,8 +150,7 @@ function renderChrome() {
     .join("");
   $("#demoBadge").hidden = !isDemo;
   $("#btnSettings").hidden = state.mode !== "dash";
-  $("#btnAch").hidden = state.mode !== "dash" && state.mode !== "ach";
-  $("#btnAch").textContent = t(state.mode === "ach" ? "app.toDash" : "ach.open");
+  renderToolNav();
   $("#aboutEngine").textContent = t("about.engine", { v: "ArchiSteamFarm 6.3.11.7" });
   renderEngineChip();
   renderAccounts(true);
@@ -165,7 +164,7 @@ function accountChips() {
     name: nameOf(a.bot),
     avatar: botOf(a.bot)?.AvatarHash ?? a.avatar ?? null,
     online: !!botOf(a.bot)?.IsConnectedAndLoggedOn,
-    current: state.mode === "dash" && a.bot === cur()?.bot,
+    current: inApp() && a.bot === cur()?.bot,
   }));
 }
 
@@ -182,7 +181,7 @@ let accountsKey = "";
 function renderAccounts(force) {
   const box = $("#accounts");
   const list = accountChips();
-  const canAdd = state.mode === "dash";
+  const canAdd = inApp();
   const key = JSON.stringify([list, state.accountOpen, getLang(), canAdd]);
   if (!force && key === accountsKey) return;
   accountsKey = key;
@@ -270,7 +269,56 @@ function render() {
   renderChrome();
   if (state.mode === "dash") renderDash();
   else if (state.mode === "ach") renderAch();
+  else if (state.mode === "home") renderHome();
   else renderWizard();
+}
+
+// ------------------------------------------------------------------ tools: the chooser after sign-in and the title-bar switch
+// Signed in, SCMFARM has two tools: card farming (the dashboard) and achievements. After an account is added the
+// chooser asks which one is wanted; the title bar switches between them at any time and the last one opens next time.
+const TOOLS = [
+  { mode: "dash", label: "nav.farm", icon: '<path d="M4 7h16v12H4zM8 7V5h8v2"/><path d="M9 13h6"/>' },
+  { mode: "ach", label: "nav.ach", icon: '<path d="M8 4h8v4a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 3M16 6h3a3 3 0 0 1-3 3M12 12v4M8 20h8M10 16h4v4h-4z"/>' },
+];
+function inApp() { return state.mode === "dash" || state.mode === "ach" || state.mode === "home"; }
+function toolIcon(path, size = 16) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+}
+function renderToolNav() {
+  const nav = $("#toolNav");
+  nav.hidden = !inApp();
+  if (nav.hidden) return;
+  nav.innerHTML = TOOLS.map((x) => `<button type="button" class="toolnav__btn${state.mode === x.mode ? " is-on" : ""}" data-tool="${x.mode}" aria-pressed="${state.mode === x.mode}">
+      ${toolIcon(x.icon)}<span>${esc(t(x.label))}</span>${x.mode === "ach" && !S().achSeen ? `<em>${esc(t("nav.new"))}</em>` : ""}</button>`).join("");
+}
+async function openTool(mode) {
+  if (!inApp() || state.mode === mode) return;
+  state.mode = mode;
+  render();
+  await saveSettings(mode === "ach" ? { tool: mode, achSeen: true } : { tool: mode });
+  renderToolNav();
+}
+function renderHome() {
+  const a = cur() || {};
+  const b = botOf(a.bot);
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]) });
+  $("#view").innerHTML = `
+    <div class="home">
+      <div class="home__who"><img class="avatar" src="${esc(avatarUrl(b?.AvatarHash ?? a.avatar))}" alt="">
+        <div><span class="label">${esc(t("home.kicker"))}</span><h1>${esc(t("home.title"))}</h1><p>${esc(t("home.lead"))}</p></div></div>
+      <div class="home__cards">
+        <button type="button" class="home__card home__card--farm" data-tool="dash">
+          <span class="home__icon">${toolIcon(TOOLS[0].icon, 30)}</span>
+          <b>${esc(t("home.farmT"))}</b><p>${esc(t("home.farmD"))}</p>
+          <span class="status" data-s="${status}"><i></i>${esc(t(`dash.status_${status}`))}</span>
+          <span class="home__go">${esc(t("home.go"))} →</span></button>
+        <button type="button" class="home__card home__card--ach" data-tool="ach">
+          <span class="home__icon">${toolIcon(TOOLS[1].icon, 30)}</span><em class="home__new">${esc(t("nav.new"))}</em>
+          <b>${esc(t("home.achT"))}</b><p>${esc(t("home.achD"))}</p>
+          <span class="home__note">${esc(t("home.achNote"))}</span>
+          <span class="home__go">${esc(t("home.go"))} →</span></button>
+      </div>
+    </div>`;
 }
 
 // ------------------------------------------------------------------ achievements (ui/js/achievements.js)
@@ -579,6 +627,7 @@ async function finish(btn) {
   btn.textContent = t("start.saving");
   const err = $("#startErr");
   const d = { ...state.draft };
+  const added = !accountsList().some((a) => a.bot === d.bot);
   try {
     const list = accountsList().some((a) => a.bot === d.bot) ? accountsList().map((a) => (a.bot === d.bot ? d : a)) : [...accountsList(), d];
     await saveSettings({ wizardDone: true, accounts: list, current: d.bot });
@@ -597,7 +646,7 @@ async function finish(btn) {
     }
     await startBot(d.bot);
     state.draft = null;
-    state.mode = "dash";
+    state.mode = added ? "home" : "dash";
     if (S().feed !== false && !state.feed) loadFeed();
     render();
     startPolling();
@@ -891,6 +940,7 @@ async function pollOnce() {
     watchForNews(a.bot, b);
     rememberAccount(a.bot, b);
   }
+  if (state.mode === "home") renderHome();
   if (state.mode === "dash") {
     updateDash();
     loadSets(cur()?.bot);
@@ -909,6 +959,7 @@ async function switchAccount(bot) {
   await saveSettings({ current: bot });
   state.dashInputError = null;
   if (state.mode === "dash") renderDash();
+  if (state.mode === "home") renderHome();
   renderAccounts(true);
   loadSets(bot);
 }
@@ -1027,9 +1078,9 @@ $("#btnSettings").addEventListener("click", () => {
   renderWizard();
 });
 $("#btnAbout").addEventListener("click", () => $("#about").showModal());
-$("#btnAch").addEventListener("click", () => {
-  state.mode = state.mode === "ach" ? "dash" : "ach";
-  render();
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-tool]");
+  if (el) openTool(el.dataset.tool);
 });
 
 // ------------------------------------------------------------------ language menu
@@ -1065,7 +1116,7 @@ $("#accounts").addEventListener("click", (e) => {
   if (!b) return;
   langMenu(false);
   state.accountOpen = state.accountOpen === b.dataset.account ? null : b.dataset.account;
-  if (state.mode === "dash") switchAccount(b.dataset.account);
+  if (inApp()) switchAccount(b.dataset.account);
   renderAccounts();
 });
 
@@ -1193,14 +1244,14 @@ async function removeFromPc() {
   state.settings = await api.settingsGet();
   setLang(detectLang(S().lang));
   await migrateSettings();
-  if (S().wizardDone && accountsList().length) state.mode = "dash";
+  if (S().wizardDone && accountsList().length) state.mode = S().tool === "ach" ? "ach" : "dash";
   else state.draft ??= newAccount();
   render();
   await updateAtStart(); // returns when there is nothing to install or the update failed
   loadFeed();
   try {
     await bootEngine();
-    if (state.mode === "dash") startPolling();
+    if (inApp()) startPolling();
   } catch (e) {
     console.error("engine", e);
   }

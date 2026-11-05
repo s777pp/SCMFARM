@@ -240,6 +240,22 @@ export default {
     buy: "Mercado",
     note: "Precios: Mercado de la Comunidad de Steam, USD, aproximados.",
   },
+  nav: {
+    farm: "Farmeo de cromos",
+    ach: "Logros",
+    new: "NUEVO",
+  },
+  home: {
+    kicker: "Cuenta conectada",
+    title: "¿Qué quieres hacer?",
+    lead: "Elige una herramienta. Puedes cambiar entre ellas cuando quieras arriba de la ventana.",
+    farmT: "Farmeo de cromos",
+    farmD: "Los cromos caen mientras tus juegos corren en segundo plano: niveles, sets e insignias sin jugar.",
+    achT: "Logros",
+    achD: "Desbloquea o quita logros de tus propios juegos, para un escaparate de logros y un perfil bonito.",
+    achNote: "Funciona con el cliente de Steam abierto en este PC.",
+    go: "Abrir",
+  },
   ach: {
     ownedWait: "Obteniendo de Steam todos los juegos de la cuenta…",
     ownedLocal: "Solo se listan los juegos abiertos en este PC: la cuenta de SCMFARM abierta en este cliente de Steam no está en línea.",

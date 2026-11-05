@@ -240,6 +240,22 @@ export default {
     buy: "Mercado",
     note: "Preços: Mercado da Comunidade Steam, USD, aproximados.",
   },
+  nav: {
+    farm: "Farm de cartas",
+    ach: "Conquistas",
+    new: "NOVO",
+  },
+  home: {
+    kicker: "Conta conectada",
+    title: "O que você quer fazer?",
+    lead: "Escolha uma ferramenta. Dá para trocar a qualquer momento no topo da janela.",
+    farmT: "Farm de cartas",
+    farmD: "As cartas caem enquanto seus jogos rodam em segundo plano: níveis, conjuntos e insígnias sem jogar.",
+    achT: "Conquistas",
+    achD: "Desbloqueie ou remova conquistas dos seus próprios jogos, para uma vitrine de conquistas e um perfil bonito.",
+    achNote: "Funciona com o cliente Steam aberto neste PC.",
+    go: "Abrir",
+  },
   ach: {
     ownedWait: "Buscando na Steam todos os jogos da conta…",
     ownedLocal: "Só aparecem jogos abertos neste PC: a conta do SCMFARM aberta neste cliente Steam não está online.",

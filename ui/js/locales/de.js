@@ -240,6 +240,22 @@ export default {
     buy: "Markt",
     note: "Preise: Steam-Communitymarkt, USD, ungefähr.",
   },
+  nav: {
+    farm: "Karten farmen",
+    ach: "Erfolge",
+    new: "NEU",
+  },
+  home: {
+    kicker: "Konto verbunden",
+    title: "Was möchtest du tun?",
+    lead: "Wähle ein Werkzeug. Oben im Fenster kannst du jederzeit wechseln.",
+    farmT: "Karten farmen",
+    farmD: "Karten fallen, während deine Spiele im Hintergrund laufen: Level, Sets und Abzeichen ohne zu spielen.",
+    achT: "Erfolge",
+    achD: "Erfolge in deinen eigenen Spielen freischalten oder entfernen, für eine Erfolgsvitrine und ein schönes Profil.",
+    achNote: "Funktioniert mit dem Steam-Client, der auf diesem PC läuft.",
+    go: "Öffnen",
+  },
   ach: {
     ownedWait: "Hole alle Spiele des Kontos von Steam…",
     ownedLocal: "Nur auf diesem PC gestartete Spiele: das SCMFARM-Konto, das im Steam-Client angemeldet ist, ist nicht online.",

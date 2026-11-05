@@ -6,7 +6,10 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 ## 0.3.0 — 2026-11-05
 
 ### Added
-- **Achievements screen** (button "Achievements" in the title bar), the way Steam Achievement Manager does it
+- **Two tools, easy to find.** After an account is added a chooser asks "What would you like to do?" with two big
+  cards: Card farming and Achievements (marked NEW). The title bar has a switch between the two at any time, and the
+  next start opens the tool used last (`settings.tool`; `achSeen` hides the NEW mark). Texts in 8 languages.
+- **Achievements screen**, the way Steam Achievement Manager does it
   (gibbed, zlib licence; code ported to Rust in `src-tauri/src/achievements.rs`, licence in `licenses/`, About →
   Licences, NOTICE, README). Left: the games whose achievement list Steam already keeps on this PC
   (`<Steam>/appcache/stats/UserGameStatsSchema_<appid>.bin`, only games run on this PC) plus every game the account

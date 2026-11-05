@@ -240,6 +240,22 @@ export default {
     buy: "Marché",
     note: "Prix : Marché de la communauté Steam, USD, approximatifs.",
   },
+  nav: {
+    farm: "Farm de cartes",
+    ach: "Succès",
+    new: "NOUVEAU",
+  },
+  home: {
+    kicker: "Compte connecté",
+    title: "Que veux-tu faire ?",
+    lead: "Choisis un outil. Tu peux passer de l'un à l'autre à tout moment en haut de la fenêtre.",
+    farmT: "Farm de cartes",
+    farmD: "Les cartes tombent pendant que tes jeux tournent en arrière-plan : niveaux, séries et badges sans jouer.",
+    achT: "Succès",
+    achD: "Débloque ou retire des succès dans tes propres jeux, pour une vitrine de succès et un beau profil.",
+    achNote: "Fonctionne avec le client Steam lancé sur ce PC.",
+    go: "Ouvrir",
+  },
   ach: {
     ownedWait: "Je récupère tous les jeux du compte depuis Steam…",
     ownedLocal: "Seuls les jeux lancés sur ce PC sont listés : le compte SCMFARM connecté à ce client Steam n'est pas en ligne.",

@@ -240,6 +240,22 @@ export default {
     buy: "Pazar",
     note: "Fiyatlar: Steam Topluluk Pazarı, USD, yaklaşık.",
   },
+  nav: {
+    farm: "Kart toplama",
+    ach: "Başarımlar",
+    new: "YENİ",
+  },
+  home: {
+    kicker: "Hesap bağlandı",
+    title: "Ne yapmak istersin?",
+    lead: "Bir araç seç. Pencerenin üstünden istediğin zaman geçiş yapabilirsin.",
+    farmT: "Kart toplama",
+    farmD: "Oyunların arka planda çalışırken kartlar düşer: oynamadan seviye, setler ve rozetler.",
+    achT: "Başarımlar",
+    achD: "Kendi oyunlarındaki başarımları aç ya da kaldır; başarım vitrini ve şık bir profil için.",
+    achNote: "Bu bilgisayarda çalışan Steam istemcisiyle çalışır.",
+    go: "Aç",
+  },
   ach: {
     ownedWait: "Hesabın tüm oyunları Steam'den alınıyor…",
     ownedLocal: "Yalnızca bu bilgisayarda çalıştırılan oyunlar listeleniyor: Steam istemcisinde açık olan SCMFARM hesabı çevrimiçi değil.",

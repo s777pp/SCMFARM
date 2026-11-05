@@ -240,6 +240,22 @@ export default {
     buy: "Market",
     note: "Prices: Steam Community Market, USD, approximate.",
   },
+  nav: {
+    farm: "Card farming",
+    ach: "Achievements",
+    new: "NEW",
+  },
+  home: {
+    kicker: "Account connected",
+    title: "What would you like to do?",
+    lead: "Pick a tool. You can switch between them at any time at the top of the window.",
+    farmT: "Card farming",
+    farmD: "Cards drop while your games run in the background: levels, sets and badges without playing.",
+    achT: "Achievements",
+    achD: "Unlock or remove achievements in your own games, for an achievement showcase and a neat profile.",
+    achNote: "Works with the Steam client running on this PC.",
+    go: "Open",
+  },
   ach: {
     ownedWait: "Getting every game of the account from Steam…",
     ownedLocal: "Only games run on this PC are listed: the SCMFARM account signed in to this Steam client is not online.",
