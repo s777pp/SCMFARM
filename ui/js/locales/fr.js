@@ -241,6 +241,7 @@ export default {
     note: "Prix : Marché de la communauté Steam, USD, approximatifs.",
   },
   ach: {
+    count: "{n} succès",
     open: "Succès",
     title: "Des succès pour ton profil",
     lead: "Choisis un jeu, coche les succès que tu veux sur ton profil et applique. Pratique pour une vitrine de succès qui forme un mot ou montre un jeu terminé.",

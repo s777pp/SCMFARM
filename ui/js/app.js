@@ -3,7 +3,7 @@ import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
 import { mountAchievements } from "./achievements.js";
 import {
   FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, kickFarming, nearSets, nextSlot,
-  parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
+  command, parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
 } from "./farm.js";
 
 const SITE = "https://showcasemaker.com";
@@ -279,6 +279,7 @@ function renderAch() {
     view: $("#view"), t, esc, api, lang: getLang, settings: S, saveSettings, ask,
     bots: () => state.bots,
     hold: (bot) => holdFarming(bot),
+    ownedGames: (bot) => command(`owns ${bot} regex/.*`),
     release: async (bot) => { await resumeFarming(bot); pollOnce(); },
   });
 }

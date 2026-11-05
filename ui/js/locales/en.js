@@ -241,6 +241,7 @@ export default {
     note: "Prices: Steam Community Market, USD, approximate.",
   },
   ach: {
+    count: "{n} achievements",
     open: "Achievements",
     title: "Achievements for your profile",
     lead: "Pick a game, tick the achievements you want on your profile and apply. Handy for an achievement showcase that spells a word or shows a finished game.",

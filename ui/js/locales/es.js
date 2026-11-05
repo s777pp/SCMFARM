@@ -241,6 +241,7 @@ export default {
     note: "Precios: Mercado de la Comunidad de Steam, USD, aproximados.",
   },
   ach: {
+    count: "{n} logros",
     open: "Logros",
     title: "Logros para tu perfil",
     lead: "Elige un juego, marca los logros que quieres en tu perfil y aplica. Útil para un escaparate de logros que forma una palabra o muestra un juego terminado.",

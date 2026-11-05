@@ -5,8 +5,22 @@
 
 const ICON_CDN = "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps";
 
+/** ASF's `owns <bot> regex/.*` answer -> [{appid, name}]. Lines read "<bot> <words in ASF's language>: app/ID | Name". */
+export function parseOwned(text) {
+  const out = [];
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const m = line.match(/(?:^|[\s:])(?:app\/)?(\d{1,10}) \| (.+)$/);
+    if (m && !/sub\/\d+ \|/.test(line)) out.push({ appid: Number(m[1]), name: m[2].trim() });
+  }
+  return out;
+}
+
+async function owned(bot, ask) {
+  return parseOwned(await ask(bot));
+}
+
 export function mountAchievements(ctx) {
-  const { view, t, esc, api, lang, settings, saveSettings, ask, bots, hold, release } = ctx;
+  const { view, t, esc, api, lang, settings, saveSettings, ask, bots, hold, release, ownedGames } = ctx;
   const st = { games: null, gamesErr: null, steam: null, query: "", appid: null, data: null, loading: false, err: null,
     changes: new Map(), filter: "all", find: "", note: null, busy: false };
 
@@ -64,12 +78,22 @@ export function mountAchievements(ctx) {
     st.gamesErr = null;
     paintGames();
     st.steam = await api.achSteam().catch(() => null);
+    let local = [];
     try {
-      st.games = st.steam?.installed ? await api.achGames(lang()) : [];
+      local = st.steam?.installed ? await api.achGames(lang()) : [];
     } catch (e) {
-      st.games = [];
       st.gamesErr = errorText(e);
     }
+    // Steam keeps achievement lists only of games run on this PC, so the full list comes from ASF: every game the
+    // account owns (it is signed in as that account anyway). Games without a stored list show no count yet.
+    const byId = new Map(local.map((g) => [g.appid, g]));
+    const bot = sameAccount();
+    if (bot) {
+      for (const g of await owned(bot, ownedGames).catch(() => [])) {
+        if (!byId.has(g.appid)) byId.set(g.appid, { appid: g.appid, name: g.name, count: null });
+      }
+    }
+    st.games = [...byId.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
     paintGames();
     if (!st.appid) paintMain();
   }
@@ -82,7 +106,7 @@ export function mountAchievements(ctx) {
     list.innerHTML = shown.length
       ? shown.map((g) => `<button type="button" class="ach__game${g.appid === st.appid ? " is-on" : ""}" data-ach="game" data-app="${g.appid}">
           <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/capsule_184x69.jpg" alt="" loading="lazy">
-          <span><b>${esc(g.name || g.appid)}</b><small>${g.count}</small></span></button>`).join("")
+          <span><b>${esc(g.name || g.appid)}</b><small>${g.count == null ? "" : esc(t("ach.count", { n: g.count }))}</small></span></button>`).join("")
       : `<p class="ach__empty">${esc(st.gamesErr || (st.games.length ? "—" : t("ach.noGames")))}</p>`;
   }
 

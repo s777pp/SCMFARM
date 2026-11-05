@@ -241,6 +241,7 @@ export default {
     note: "Preise: Steam-Communitymarkt, USD, ungefähr.",
   },
   ach: {
+    count: "{n} Erfolge",
     open: "Erfolge",
     title: "Erfolge für dein Profil",
     lead: "Wähle ein Spiel, hake die Erfolge an, die du auf dem Profil willst, und übernimm sie. Praktisch für eine Erfolgsvitrine, die ein Wort bildet oder ein durchgespieltes Spiel zeigt.",

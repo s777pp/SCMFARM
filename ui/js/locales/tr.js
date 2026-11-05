@@ -241,6 +241,7 @@ export default {
     note: "Fiyatlar: Steam Topluluk Pazarı, USD, yaklaşık.",
   },
   ach: {
+    count: "{n} başarım",
     open: "Başarımlar",
     title: "Profilin için başarımlar",
     lead: "Bir oyun seç, profilinde görmek istediğin başarımları işaretle ve uygula. Bir kelime oluşturan ya da bitmiş bir oyunu gösteren başarım vitrini için kullanışlı.",

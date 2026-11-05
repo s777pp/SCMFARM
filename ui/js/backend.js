@@ -171,6 +171,11 @@ function mockBackend() {
         const list = (ids || "").split(",").map(Number);
         if (m && cmd === "fqadd") m.queue.push(...list);
         if (m && cmd === "fbadd") list.forEach((id) => m.skipped.add(id));
+        // like ASF in Russian: "<bot> Уже имеется: app/ID | Name", then a summary line
+        if (m && cmd === "owns") return ok(`<${name}> Уже имеется: app/900001 | Demo Adventure
+<${name}> Уже имеется: app/900003 | Demo Puzzle
+<${name}> Уже имеется: app/620 | Portal 2
+<${name}> Владеет 3 из 3.`);
         return ok("OK");
       }
       const inv = path.match(/^\/Api\/Bot\/(\w+)\/Inventory\/753\/6$/);

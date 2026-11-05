@@ -241,6 +241,7 @@ export default {
     note: "Preços: Mercado da Comunidade Steam, USD, aproximados.",
   },
   ach: {
+    count: "{n} conquistas",
     open: "Conquistas",
     title: "Conquistas para o seu perfil",
     lead: "Escolha um jogo, marque as conquistas que quer no perfil e aplique. Útil para uma vitrine de conquistas que forma uma palavra ou mostra um jogo zerado.",

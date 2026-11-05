@@ -9,7 +9,9 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 - **Achievements screen** (button "Achievements" in the title bar), the way Steam Achievement Manager does it
   (gibbed, zlib licence; code ported to Rust in `src-tauri/src/achievements.rs`, licence in `licenses/`, About →
   Licences, NOTICE, README). Left: the games whose achievement list Steam already keeps on this PC
-  (`<Steam>/appcache/stats/UserGameStatsSchema_<appid>.bin`), a search and "open by appid". Right: the game's
+  (`<Steam>/appcache/stats/UserGameStatsSchema_<appid>.bin`, only games run on this PC) plus every game the account
+  owns, asked from ASF (`owns <bot> regex/.*`, the bot signed in as the same account as the Steam client; lines
+  "… app/ID | Name" in any ASF language), a search and "open by appid". Right: the game's
   achievements with icon, name, description, global %, unlock date; tick / untick and apply all at once; hidden ones
   are marked, protected ones (set by the game's servers, `(permission & 3) != 0`) are locked. Filters all / locked /
   unlocked, search, "tick all locked", undo.
