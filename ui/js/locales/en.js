@@ -241,6 +241,8 @@ export default {
     note: "Prices: Steam Community Market, USD, approximate.",
   },
   ach: {
+    ownedWait: "Getting every game of the account from Steam…",
+    ownedLocal: "Only games run on this PC are listed: the SCMFARM account signed in to this Steam client is not online.",
     count: "{n} achievements",
     open: "Achievements",
     title: "Achievements for your profile",

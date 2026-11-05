@@ -87,27 +87,43 @@ export function mountAchievements(ctx) {
     // Steam keeps achievement lists only of games run on this PC, so the full list comes from ASF: every game the
     // account owns (it is signed in as that account anyway). Games without a stored list show no count yet.
     const byId = new Map(local.map((g) => [g.appid, g]));
-    const bot = sameAccount();
-    if (bot) {
-      for (const g of await owned(bot, ownedGames).catch(() => [])) {
-        if (!byId.has(g.appid)) byId.set(g.appid, { appid: g.appid, name: g.name, count: null });
-      }
-    }
-    st.games = [...byId.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    const sorted = () => [...byId.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    st.games = sorted();
     paintGames();
     if (!st.appid) paintMain();
+    // Right after SCMFARM starts ASF may still be signing in: wait for it (up to two minutes) instead of giving up.
+    const run = (st.gamesRun = (st.gamesRun || 0) + 1);
+    st.ownedState = "wait";
+    paintGames();
+    for (let i = 0; i < 60 && run === st.gamesRun && view.isConnected; i++) {
+      const bot = sameAccount();
+      if (bot && bots()[bot]?.IsConnectedAndLoggedOn) {
+        const list = await owned(bot, ownedGames).catch(() => null);
+        if (list?.length && run === st.gamesRun) {
+          for (const g of list) if (!byId.has(g.appid)) byId.set(g.appid, { appid: g.appid, name: g.name, count: null });
+          st.games = sorted();
+          st.ownedState = "ok";
+          paintGames();
+          return;
+        }
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    if (run === st.gamesRun) { st.ownedState = "local"; paintGames(); }
   }
   function paintGames() {
     const list = $("#achList");
     if (!st.games) { list.innerHTML = `<p class="ach__empty"><span class="ach-spin"></span></p>`; return; }
     if (!st.steam?.installed) { list.innerHTML = `<p class="ach__empty">${esc(t("ach.noSteam"))}</p>`; return; }
     const q = st.query.trim().toLowerCase();
+    const status = st.ownedState === "wait" ? `<p class="ach__status"><span class="ach-spin"></span>${esc(t("ach.ownedWait"))}</p>`
+      : st.ownedState === "local" ? `<p class="ach__status">${esc(t("ach.ownedLocal"))}</p>` : "";
     const shown = st.games.filter((g) => !q || g.name.toLowerCase().includes(q) || String(g.appid) === q);
-    list.innerHTML = shown.length
+    list.innerHTML = status + (shown.length
       ? shown.map((g) => `<button type="button" class="ach__game${g.appid === st.appid ? " is-on" : ""}" data-ach="game" data-app="${g.appid}">
           <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.appid}/capsule_184x69.jpg" alt="" loading="lazy">
           <span><b>${esc(g.name || g.appid)}</b><small>${g.count == null ? "" : esc(t("ach.count", { n: g.count }))}</small></span></button>`).join("")
-      : `<p class="ach__empty">${esc(st.gamesErr || (st.games.length ? "—" : t("ach.noGames")))}</p>`;
+      : `<p class="ach__empty">${esc(st.gamesErr || (st.games.length ? "—" : t("ach.noGames")))}</p>`);
   }
 
   // ------------------------------------------------------------ one game

@@ -241,6 +241,8 @@ export default {
     note: "Prix : Marché de la communauté Steam, USD, approximatifs.",
   },
   ach: {
+    ownedWait: "Je récupère tous les jeux du compte depuis Steam…",
+    ownedLocal: "Seuls les jeux lancés sur ce PC sont listés : le compte SCMFARM connecté à ce client Steam n'est pas en ligne.",
     count: "{n} succès",
     open: "Succès",
     title: "Des succès pour ton profil",

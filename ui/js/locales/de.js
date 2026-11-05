@@ -241,6 +241,8 @@ export default {
     note: "Preise: Steam-Communitymarkt, USD, ungefähr.",
   },
   ach: {
+    ownedWait: "Hole alle Spiele des Kontos von Steam…",
+    ownedLocal: "Nur auf diesem PC gestartete Spiele: das SCMFARM-Konto, das im Steam-Client angemeldet ist, ist nicht online.",
     count: "{n} Erfolge",
     open: "Erfolge",
     title: "Erfolge für dein Profil",

@@ -241,6 +241,8 @@ export default {
     note: "Preços: Mercado da Comunidade Steam, USD, aproximados.",
   },
   ach: {
+    ownedWait: "Buscando na Steam todos os jogos da conta…",
+    ownedLocal: "Só aparecem jogos abertos neste PC: a conta do SCMFARM aberta neste cliente Steam não está online.",
     count: "{n} conquistas",
     open: "Conquistas",
     title: "Conquistas para o seu perfil",

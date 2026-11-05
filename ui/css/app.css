@@ -415,6 +415,7 @@ dialog .btn{margin-top:22px}
 .ach__byid{display:flex;gap:8px}
 .ach__byid .input{min-width:0;flex:1}
 .ach__credit{color:var(--ui-faint);font-size:var(--ui-text-xs);line-height:1.4}
+.ach__status{display:flex;align-items:center;gap:6px;margin:0 0 6px;padding:8px 10px;border-radius:var(--ui-r-md);background:rgba(31,201,241,.07);color:var(--ui-cyan-hi);font-size:var(--ui-text-xs);font-weight:700;line-height:1.4}
 .ach__empty{margin:10px 4px;color:var(--ui-muted);font-size:var(--ui-text-sm);line-height:1.5}
 .ach__main{display:flex;flex-direction:column;gap:12px;min-height:0;padding:16px 18px}
 .ach__intro{max-width:620px;margin:auto 0}

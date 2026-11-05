@@ -241,6 +241,8 @@ export default {
     note: "Fiyatlar: Steam Topluluk Pazarı, USD, yaklaşık.",
   },
   ach: {
+    ownedWait: "Hesabın tüm oyunları Steam'den alınıyor…",
+    ownedLocal: "Yalnızca bu bilgisayarda çalıştırılan oyunlar listeleniyor: Steam istemcisinde açık olan SCMFARM hesabı çevrimiçi değil.",
     count: "{n} başarım",
     open: "Başarımlar",
     title: "Profilin için başarımlar",
