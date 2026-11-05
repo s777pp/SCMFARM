@@ -15,12 +15,31 @@ export function parseOwned(text) {
   return out;
 }
 
+/** scmfarm://letters?w=WORD&g=APPID:HASH.HASH,APPID:HASH -> {word, games: [{appid, hashes}]} or null.
+ * The site's "Achievement letters" tool sends the icons it chose (40-hex icon hashes); every part is checked here. */
+export function parseLetters(link) {
+  let url;
+  try { url = new URL(String(link || "")); } catch { return null; }
+  if (url.protocol !== "scmfarm:" || (url.hostname || url.pathname.replace(/^\/+/, "")).toLowerCase() !== "letters") return null;
+  const word = (url.searchParams.get("w") || "").slice(0, 21);
+  const games = [];
+  let icons = 0;
+  for (const part of (url.searchParams.get("g") || "").split(",")) {
+    const m = part.match(/^(\d{1,10}):([0-9a-f]{40}(?:\.[0-9a-f]{40})*)$/i);
+    if (!m) return null;
+    const hashes = [...new Set(m[2].toLowerCase().split("."))];
+    icons += hashes.length;
+    games.push({ appid: Number(m[1]), hashes });
+  }
+  return games.length && games.length <= 21 && icons <= 21 ? { word, games } : null;
+}
+
 async function owned(bot, ask) {
   return parseOwned(await ask(bot));
 }
 
 export function mountAchievements(ctx) {
-  const { view, t, esc, api, lang, settings, saveSettings, ask, bots, hold, release, ownedGames } = ctx;
+  const { view, t, esc, api, lang, settings, saveSettings, ask, bots, hold, release, ownedGames, letters, lettersClose, openSite } = ctx;
   const st = { games: null, gamesErr: null, steam: null, query: "", appid: null, data: null, loading: false, err: null,
     changes: new Map(), filter: "all", find: "", note: null, busy: false };
 
@@ -183,8 +202,63 @@ export function mountAchievements(ctx) {
     try { return new Date(sec * 1000).toLocaleDateString(lang()); } catch { return ""; }
   }
 
+  // ------------------------------------------------------------ "Achievement letters" from the site
+  st.letters = letters ? { ...letters, status: {}, running: false, done: false } : null;
+  function lettersPanel() {
+    const L = st.letters;
+    const n = L.games.reduce((sum, g) => sum + g.hashes.length, 0);
+    const rows = L.games.map((g) => {
+      const name = st.games?.find((x) => x.appid === g.appid)?.name || `app ${g.appid}`;
+      const s = L.status[g.appid];
+      const text = !s ? t("ach.lettersWait") : s.err ? s.err : s.running ? t("ach.loading")
+        : [s.done ? t("ach.lettersDone", { n: s.done }) : "", s.have ? t("ach.lettersHave", { n: s.have }) : "", s.missing ? t("ach.lettersMissing", { n: s.missing }) : ""].filter(Boolean).join(" · ");
+      return `<li><b>${esc(name)}</b><span class="${s?.err ? "error-text" : ""}">${s?.running ? '<span class="ach-spin"></span>' : ""}${esc(text)}</span></li>`;
+    }).join("");
+    return `<div class="ach__letters"><h2>${esc(t("ach.lettersTitle", { w: L.word || "…" }))}</h2>
+      <p>${esc(t("ach.lettersLead", { n, g: L.games.length }))}</p><ul>${rows}</ul>
+      ${L.done ? (Object.values(L.status).some((s) => s.done || s.have)
+        ? `<p class="ach__hint">${esc(t("ach.lettersNext"))}</p><button class="btn btn--primary" data-ach="letters-site">${esc(t("ach.lettersSite"))}</button>` : "")
+        : `<button class="btn btn--primary" data-ach="letters-go" ${L.running ? "disabled" : ""}>${L.running ? `<span class="ach-spin"></span>` : ""}${esc(t("ach.lettersGo"))}</button>`}
+      <button class="btn" data-ach="letters-close" ${L.running ? "disabled" : ""}>${esc(t("ach.lettersClose"))}</button></div>`;
+  }
+  async function runLetters() {
+    const L = st.letters;
+    if (!L || L.running) return;
+    if (!settings().achWarned) {
+      if (!(await ask(t("ach.warnTitle"), t("ach.warnText"), t("ach.warnOk")))) return;
+      await saveSettings({ achWarned: true });
+    }
+    L.running = true;
+    for (const g of L.games) {
+      L.status[g.appid] = { running: true };
+      paintMain();
+      try {
+        const data = await aroundSteam(() => api.achLoad(g.appid, lang()));
+        const strip = (icon) => String(icon || "").toLowerCase().replace(/\.[a-z]+$/, "");
+        const hits = data.achievements.filter((a) => g.hashes.includes(strip(a.icon)) || g.hashes.includes(strip(a.iconGray)));
+        const set = hits.filter((a) => !a.achieved && !a.protected).map((a) => a.id);
+        const status = { have: hits.filter((a) => a.achieved).length, missing: g.hashes.length - hits.length };
+        if (set.length) {
+          const out = await aroundSteam(() => api.achApply(g.appid, set, [], lang()));
+          status.done = set.length - (out.stored?.failed?.length || 0);
+        }
+        L.status[g.appid] = status;
+      } catch (e) {
+        L.status[g.appid] = { err: errorText(e) };
+      }
+      paintMain();
+    }
+    L.running = false;
+    L.done = true;
+    paintMain();
+  }
+
   function paintMain() {
     const main = $("#achMain");
+    if (st.letters && !st.appid) {
+      main.innerHTML = lettersPanel();
+      return;
+    }
     if (!st.appid) {
       main.innerHTML = `<div class="ach__intro"><h2>${esc(t("ach.title"))}</h2><p>${esc(t("ach.lead"))}</p>
         <p class="ach__hint">${esc(st.steam && !st.steam.user && st.steam.installed ? t("ach.steamOff") : t("ach.pick"))}</p></div>`;
@@ -255,6 +329,9 @@ export function mountAchievements(ctx) {
     else if (what === "reload") { loadGames(); if (st.appid) openGame(st.appid); }
     else if (what === "filter") { st.filter = el.dataset.f; paintMain(); }
     else if (what === "undo") { st.changes.clear(); paintMain(); }
+    else if (what === "letters-go") runLetters();
+    else if (what === "letters-close") { st.letters = null; lettersClose?.(); paintMain(); }
+    else if (what === "letters-site") openSite();
     else if (what === "apply") apply();
     else if (what === "all-locked") {
       st.data.achievements.forEach((a) => { if (!a.protected && !a.achieved) st.changes.set(a.id, true); else if (!a.protected && st.changes.get(a.id) === false) st.changes.delete(a.id); });

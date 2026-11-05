@@ -97,6 +97,14 @@ Last updated 2026-11-03 (0.2.0). History of changes: `CHANGELOG.md`.
   tick one locked achievement, apply, check the Steam profile; then untick and apply again.
 - Later: showcasemaker.com's achievement-letters tool can hand a list of appid + ids; `ach_apply` already takes lists.
 
+## scmfarm:// links (0.3.0)
+- `src-tauri/src/links.rs`: HKCU\Software\Classes\scmfarm -> this exe, on every start (the exe is portable);
+  `link_take` for a fresh start, event `scmfarm-link` from the single-instance plugin for a running window.
+- `ui/js/achievements.js parseLetters` checks everything in the link: `scmfarm://letters?w=WORD&g=APPID:HASH.HASH,...`
+  (40-hex icon hashes, at most 21 games / icons). Nothing is unlocked without the click on "Unlock all".
+- The site builds the link in `static/js/achievement-letters.js`. Demo: `npm run preview`, `?letters=1`. Not yet
+  checked against a real Steam client.
+
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - `zip` crate is pinned to 2.x on purpose (API used in `engine.rs`).

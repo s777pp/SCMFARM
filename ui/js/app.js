@@ -1,6 +1,6 @@
 import { api, isDemo } from "./backend.js";
 import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
-import { mountAchievements } from "./achievements.js";
+import { mountAchievements, parseLetters } from "./achievements.js";
 import { createFree } from "./free.js";
 import {
   FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, kickFarming, nearSets, nextSlot,
@@ -329,6 +329,9 @@ function renderAch() {
     bots: () => state.bots,
     hold: (bot) => holdFarming(bot),
     ownedGames: (bot) => command(`owns ${bot} regex/.*`),
+    letters: state.letters,
+    lettersClose: () => { state.letters = null; },
+    openSite: () => api.openExternal(`${SITE}/${getLang()}/tools/achievement-showcase`),
     release: async (bot) => { await resumeFarming(bot); pollOnce(); },
   });
 }
@@ -647,7 +650,7 @@ async function finish(btn) {
     }
     await startBot(d.bot);
     state.draft = null;
-    state.mode = added ? "home" : "dash";
+    state.mode = state.letters ? "ach" : added ? "home" : "dash";
     if (S().feed !== false && !state.feed) loadFeed();
     render();
     startPolling();
@@ -1250,6 +1253,20 @@ const free = createFree({
   onlineBots: () => accountsList().map((a) => a.bot).filter((bot) => botOf(bot)?.IsConnectedAndLoggedOn),
 });
 
+// ------------------------------------------------------------------ scmfarm:// links (src-tauri/src/links.rs)
+// "Achievement letters" on showcasemaker.com opens scmfarm://letters?…: the Achievements screen shows what will be
+// unlocked and does it on "Unlock all". A link that arrives during the first setup waits until the account is added.
+function handleLink(link) {
+  const letters = parseLetters(link);
+  if (!letters) return;
+  state.letters = letters;
+  if (inApp()) {
+    state.mode = "ach";
+    render();
+  }
+}
+api.onLink?.(handleLink);
+
 // ------------------------------------------------------------------ boot
 (async function main() {
   state.settings = await api.settingsGet();
@@ -1261,6 +1278,7 @@ const free = createFree({
   await updateAtStart(); // returns when there is nothing to install or the update failed
   loadFeed();
   free.start();
+  api.linkTake?.().then((link) => link && handleLink(link)).catch(() => {});
   try {
     await bootEngine();
     if (inApp()) startPolling();

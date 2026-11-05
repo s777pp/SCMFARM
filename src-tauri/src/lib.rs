@@ -1,6 +1,7 @@
 pub mod achievements;
 mod engine;
 mod extras;
+mod links;
 mod settings;
 mod system;
 mod updater;
@@ -21,8 +22,14 @@ pub fn run() {
     // After a self-update: wait for the old process to go away before the single-instance check.
     updater::finish_previous_update();
     let app = tauri::Builder::default()
-        // A second launch (e.g. from the Start menu while we sit in the tray) just shows the window.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_main(app)))
+        // A second launch (e.g. from the Start menu while we sit in the tray) just shows the window; a scmfarm:// link
+        // it was started with goes to the running window (src/links.rs).
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            show_main(app);
+            if let Some(link) = links::find(&args) {
+                links::keep(app, link);
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
@@ -30,7 +37,13 @@ pub fn run() {
             Some(vec!["--minimized"]),
         ))
         .manage(engine::Engine::default())
+        .manage(links::Pending::default())
         .setup(|app| {
+            links::register();
+            let args: Vec<String> = std::env::args().collect();
+            if let Some(link) = links::find(&args) {
+                *app.state::<links::Pending>().0.lock().unwrap() = Some(link);
+            }
             let show = MenuItem::with_id(app, "show", "SCMFARM", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit / Выход", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;
@@ -95,6 +108,7 @@ pub fn run() {
             extras::feed_get,
             extras::card_set,
             extras::free_get,
+            links::link_take,
             achievements::ach_steam,
             achievements::ach_games,
             achievements::ach_load,

@@ -43,6 +43,7 @@ pub fn open_licenses(app: AppHandle) -> Result<(), String> {
 pub async fn remove_from_pc(app: AppHandle, engine: State<'_, Engine>, delete_exe: bool) -> Result<(), String> {
     engine.stop().await;
     let _ = app.autolaunch().disable();
+    crate::links::unregister();   // the scmfarm:// link handler (HKCU\Software\Classes\scmfarm)
     for dir in [app.path().app_data_dir(), app.path().app_config_dir()].into_iter().flatten() {
         let _ = fs::remove_dir_all(dir);
     }

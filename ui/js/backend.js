@@ -43,6 +43,8 @@ function realBackend() {
     feedGet: () => invoke("feed_get"),
     cardSet: (appid) => invoke("card_set", { appid }),
     freeGet: () => invoke("free_get"),
+    linkTake: () => invoke("link_take"),
+    onLink: (cb) => tauri.event.listen("scmfarm-link", (e) => cb(e.payload)),
     achSteam: () => invoke("ach_steam"),
     achGames: (lang) => invoke("ach_games", { lang }),
     achLoad: (appid, lang) => invoke("ach_load", { appid, lang }),
@@ -281,6 +283,11 @@ function mockBackend() {
     async feedGet() {
       return params.has("nofeed") ? null : feed;
     },
+    // scmfarm:// links: ?letters=1 starts as if opened from the site with two games of letters.
+    async linkTake() {
+      return params.has("letters") ? "scmfarm://letters?w=HI&g=900001:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,900002:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" : null;
+    },
+    onLink() {},
     // Free games: one free-to-keep DLC and one key giveaway (?nofree=1: nothing free right now).
     async freeGet() {
       if (params.has("nofree")) return { v: 1, updated: "", steam: [], keys: [] };

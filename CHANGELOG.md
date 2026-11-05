@@ -6,6 +6,11 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 ## 0.3.0 — 2026-11-05
 
 ### Added
+- **Achievement letters from the site.** "Open in SCMFARM" in the site's Achievement letters tool opens a
+  `scmfarm://letters?...` link (`src-tauri/src/links.rs`: registered for the current user on every start, removed by
+  "Remove from this PC"; a second start hands the link to the running window). The Achievements screen lists the
+  games and, after a click on "Unlock all", unlocks the achievements with the chosen icons (protected ones are left
+  alone). A link that arrives during the first setup waits until the account is added. 8 languages.
 - **Free right now** on the farm dashboard: games and DLC that are free to keep on Steam and Steam key giveaways on
   other sites, from showcasemaker.com (`/api/scmfarm/free`, Rust `free_get`, every 30 minutes, only with the "Steam
   news" switch on; the same answer for everyone). "Claim" adds a Steam item to every signed-in account through ASF
