@@ -814,7 +814,7 @@ function updateSets() {
     const note = (r) => (r.full ? t("sets.full") : r.size ? t("sets.missing", { n: r.missing, price: fmtUsd(r.price) }) : t("sets.unknown", { n: r.have }));
     body = rows.length
       // A row opens the badge page (full set: craft it) or the market filtered to this game's cards.
-      ? `<ul>${rows.map((r) => `<li role="link" tabindex="0" title="${esc(t(r.full ? "sets.craft" : "sets.buy"))}" data-href="${r.full ? `https://steamcommunity.com/my/gamecards/${r.appid}/` : `https://steamcommunity.com/market/search?appid=753&category_753_Game%5B%5D=tag_app_${r.appid}&category_753_cardborder%5B%5D=tag_cardborder_0&category_753_item_class%5B%5D=tag_item_class_2`}">
+      ? `<ul>${rows.map((r) => `<li role="link" tabindex="0" title="${esc(t(r.full ? "sets.craft" : "sets.buy"))}" data-href="https://steamcommunity.com/my/gamecards/${r.appid}/">
           <img src="${capsule(r.appid)}" alt="" loading="lazy">
           <div><b>${esc(r.name || `App ${r.appid}`)}</b><small>${esc(note(r))}</small></div>
           <span class="cards-pill${r.full ? " is-full" : ""}">${r.have}/${r.size || "?"}</span>
