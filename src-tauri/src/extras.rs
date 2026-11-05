@@ -16,6 +16,8 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_notification::NotificationExt;
 
 const FEED_URL: &str = "https://showcasemaker.com/api/scmfarm/feed";
+// Free Steam games right now (showcasemaker.com smweb/free_games.py), the same for everyone; asked every 30 minutes.
+const FREE_URL: &str = "https://showcasemaker.com/api/scmfarm/free";
 const FEED_MAX_AGE: Duration = Duration::from_secs(24 * 3600);
 const TELEGRAM: &str = "https://api.telegram.org";
 const MARKET: &str = "https://steamcommunity.com/market/search/render/";
@@ -135,6 +137,13 @@ pub async fn feed_get(app: AppHandle) -> Option<Value> {
             cached.map(|(v, _)| v).filter(valid_feed)
         }
     }
+}
+
+/// Free-to-keep Steam items (with the sub ids ASF claims) and Steam key giveaways elsewhere; None when offline.
+#[tauri::command]
+pub async fn free_get() -> Option<Value> {
+    let r = client(30).ok()?.get(FREE_URL).send().await.ok()?.error_for_status().ok()?;
+    r.json::<Value>().await.ok().filter(|v| v["v"] == 1 && v["steam"].is_array() && v["keys"].is_array())
 }
 
 fn now_secs() -> u64 {

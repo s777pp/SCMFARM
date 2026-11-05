@@ -1,6 +1,7 @@
 import { api, isDemo } from "./backend.js";
 import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
 import { mountAchievements } from "./achievements.js";
+import { createFree } from "./free.js";
 import {
   FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, kickFarming, nearSets, nextSlot,
   command, parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
@@ -666,6 +667,7 @@ function renderDash() {
     <div class="dash">
       <section class="panel dash__head" id="dHead"></section>
       <section class="sale" id="dSale" hidden></section>
+      <section class="free" id="dFree" hidden></section>
       <section class="panel attention" id="dInput" hidden></section>
       <div class="dash__grid">
         <div class="dash__main">
@@ -689,6 +691,7 @@ function renderDash() {
   updateDash();
   updateSale();
   updateSets();
+  free.paint();
 }
 
 function updateLevel() {
@@ -904,8 +907,9 @@ async function submitDashInput(type, value) {
 // ------------------------------------------------------------------ notifications
 // Windows notification and/or the user's own Telegram bot, when farming on an account ends or Steam needs input.
 function notify(kind, bot) {
-  const title = t(`notify.${kind}Title`);
-  const body = t(`notify.${kind}Body`, { name: nameOf(bot) });
+  notifyText(t(`notify.${kind}Title`), t(`notify.${kind}Body`, { name: nameOf(bot) }));
+}
+function notifyText(title, body) {
   if (S().notifyWindows !== false) api.notifyToast(title, body).catch((e) => console.warn("toast", e));
   const tg = S().telegram;
   if (tg?.token && tg?.chatId) api.telegramSend(tg.token, tg.chatId, `${title}\n${body}`).catch((e) => console.warn("telegram", e));
@@ -1239,6 +1243,13 @@ async function removeFromPc() {
   await api.removeFromPc(true);
 }
 
+// ------------------------------------------------------------------ free games (ui/js/free.js)
+const free = createFree({
+  t, esc, api, settings: S, saveSettings, command, openExternal: (url) => api.openExternal(url),
+  notify: (title, body) => notifyText(title, body),
+  onlineBots: () => accountsList().map((a) => a.bot).filter((bot) => botOf(bot)?.IsConnectedAndLoggedOn),
+});
+
 // ------------------------------------------------------------------ boot
 (async function main() {
   state.settings = await api.settingsGet();
@@ -1249,6 +1260,7 @@ async function removeFromPc() {
   render();
   await updateAtStart(); // returns when there is nothing to install or the update failed
   loadFeed();
+  free.start();
   try {
     await bootEngine();
     if (inApp()) startPolling();

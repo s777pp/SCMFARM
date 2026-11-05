@@ -6,6 +6,11 @@ Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Carg
 ## 0.3.0 — 2026-11-05
 
 ### Added
+- **Free right now** on the farm dashboard: games and DLC that are free to keep on Steam and Steam key giveaways on
+  other sites, from showcasemaker.com (`/api/scmfarm/free`, Rust `free_get`, every 30 minutes, only with the "Steam
+  news" switch on; the same answer for everyone). "Claim" adds a Steam item to every signed-in account through ASF
+  (`addlicense <bots> sub/<id>`); "Claim by myself on all accounts" does it as soon as one appears (retried on later
+  checks if no account was online). New items are announced once in Windows / Telegram. `ui/js/free.js`, 8 languages.
 - **Two tools, easy to find.** After an account is added a chooser asks "What would you like to do?" with two big
   cards: Card farming and Achievements (marked NEW). The title bar has a switch between the two at any time, and the
   next start opens the tool used last (`settings.tool`; `achSeen` hides the NEW mark). Texts in 8 languages.

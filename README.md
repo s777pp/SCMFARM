@@ -138,7 +138,8 @@ both folders and the exe itself, then quits.
   * showcasemaker.com, only with the matching switch on (Settings → Options, both on by default and explained there):
     "Update SCMFARM automatically" asks once per start for the newest version; "Steam news from showcasemaker.com"
     downloads at most once a day one file that is the same for everyone (Steam sale dates, card set sizes and
-    prices). Neither request carries account data or identifiers;
+    prices) and every 30 minutes the list of free Steam games (also the same for everyone). None of these requests
+    carries account data or identifiers;
   * api.telegram.org, only if the user connects their **own** Telegram bot (token from @BotFather). Messages go
     straight from the PC to Telegram and contain only the account's display name and what happened ("farming
     finished", "Steam asks for a code"). The bot token and chat id stay in `settings.json` on the PC; "Turn off"

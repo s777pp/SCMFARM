@@ -94,6 +94,7 @@ pub fn run() {
             extras::telegram_send,
             extras::feed_get,
             extras::card_set,
+            extras::free_get,
             achievements::ach_steam,
             achievements::ach_games,
             achievements::ach_load,

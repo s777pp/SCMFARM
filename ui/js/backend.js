@@ -42,6 +42,7 @@ function realBackend() {
     telegramSend: (token, chatId, text) => invoke("telegram_send", { token, chatId, text }),
     feedGet: () => invoke("feed_get"),
     cardSet: (appid) => invoke("card_set", { appid }),
+    freeGet: () => invoke("free_get"),
     achSteam: () => invoke("ach_steam"),
     achGames: (lang) => invoke("ach_games", { lang }),
     achLoad: (appid, lang) => invoke("ach_load", { appid, lang }),
@@ -279,6 +280,13 @@ function mockBackend() {
     },
     async feedGet() {
       return params.has("nofeed") ? null : feed;
+    },
+    // Free games: one free-to-keep DLC and one key giveaway (?nofree=1: nothing free right now).
+    async freeGet() {
+      if (params.has("nofree")) return { v: 1, updated: "", steam: [], keys: [] };
+      return { v: 1, updated: new Date().toISOString(), steam: [
+        { appid: 4693960, subid: 1782986, name: "Hunting Simulator 3 - Classic American Hunter Pack", kind: "dlc", worth: 499, image: "", url: "https://store.steampowered.com/app/4693960/" }],
+        keys: [{ id: 3843, name: "Letter Quest: Grimm's Journey Remastered", kind: "game", worth: "$6.99", image: "", url: "https://www.gamerpower.com/", ends: "2026-11-09" }] };
     },
     // Achievements: two made-up games; ?nosteam=1 shows the "Steam is not running" state.
     async achSteam() {

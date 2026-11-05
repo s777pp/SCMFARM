@@ -309,6 +309,20 @@ textarea.input{height:auto;min-height:110px;padding:12px 14px;font-family:var(--
 /* Steam sale strip */
 .sale{display:flex;align-items:center;gap:14px;padding:10px 16px;border:1px solid rgba(255,214,107,.4);border-radius:var(--ui-r-xl);background:linear-gradient(90deg,rgba(255,214,107,.12),rgba(31,201,241,.05))}
 .sale>i{font-style:normal;color:var(--ui-warn);font-size:18px}
+/* "Free right now" (ui/js/free.js) */
+.free{display:grid;gap:6px;padding:8px 16px;border:1px solid rgba(95,242,181,.4);border-radius:var(--ui-r-xl);background:linear-gradient(90deg,rgba(95,242,181,.1),rgba(31,201,241,.05))}
+.free[hidden]{display:none}
+.free__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.free__head b{color:#fff}
+.free__auto{display:inline-flex;align-items:center;gap:8px;color:var(--ui-muted);font-size:var(--ui-text-sm);font-weight:700;cursor:pointer}
+.free__auto input{width:16px;height:16px;accent-color:var(--ui-good)}
+.free__list{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:6px 18px}
+.free__item{display:flex;align-items:center;gap:12px}
+.free__name{display:grid;flex:1;min-width:0}
+.free__name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--ui-text-sm)}
+.free__name small{color:var(--ui-muted);font-size:var(--ui-text-xs)}
+.free__done{display:inline-flex;align-items:center;color:var(--ui-good);font-weight:800;font-size:var(--ui-text-sm);white-space:nowrap}
+.free__err{margin:0;color:#ffb3bf;font-size:var(--ui-text-xs)}
 .sale p{flex:1;min-width:0;color:var(--ui-muted);font-size:var(--ui-text-sm)}
 .sale b{color:#fff}
 /* sets close to a badge */
