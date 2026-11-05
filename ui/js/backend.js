@@ -42,6 +42,10 @@ function realBackend() {
     telegramSend: (token, chatId, text) => invoke("telegram_send", { token, chatId, text }),
     feedGet: () => invoke("feed_get"),
     cardSet: (appid) => invoke("card_set", { appid }),
+    achSteam: () => invoke("ach_steam"),
+    achGames: (lang) => invoke("ach_games", { lang }),
+    achLoad: (appid, lang) => invoke("ach_load", { appid, lang }),
+    achApply: (appid, set, clear, lang) => invoke("ach_apply", { appid, set, clear, lang }),
   };
 }
 
@@ -91,7 +95,7 @@ function mockBackend() {
     bot.KeepRunning = true;
     bot.RequiredInput = 0;
     await sleep(900);
-    const signedIn = () => Object.assign(bot, { IsConnectedAndLoggedOn: true, Nickname: bot.BotConfig.SteamLogin === "demo" || bots.size < 2 ? "Demo farmer" : `Demo ${bot.BotConfig.SteamLogin}`, AvatarHash: null });
+    const signedIn = () => Object.assign(bot, { IsConnectedAndLoggedOn: true, SteamID: bots.size < 2 ? 76561198000000001 : 76561198000000000 + bots.size, Nickname: bot.BotConfig.SteamLogin === "demo" || bots.size < 2 ? "Demo farmer" : `Demo ${bot.BotConfig.SteamLogin}`, AvatarHash: null });
     if (m.qrWanted) {
       m.qrWanted = false;
       Object.assign(bot, { RequiredInput: 8, QrChallengeURL: "https://s.team/q/1/" + Date.now() });
@@ -271,7 +275,36 @@ function mockBackend() {
     async feedGet() {
       return params.has("nofeed") ? null : feed;
     },
+    // Achievements: two made-up games; ?nosteam=1 shows the "Steam is not running" state.
+    async achSteam() {
+      return { installed: true, user: params.has("nosteam") ? null : "76561198000000001" };
+    },
+    async achGames() {
+      return [{ appid: 900001, name: "Demo Adventure", count: 6 }, { appid: 900002, name: "Demo Racer", count: 4 }];
+    },
+    async achLoad(appid) {
+      await sleep(900);
+      return { appid, game: appid === 900001 ? "Demo Adventure" : "Demo Racer", steamid: "76561198000000001", achievements: achDemo(appid) };
+    },
+    async achApply(appid, set, clear) {
+      await sleep(1200);
+      achDemo(appid).forEach((a) => {
+        if (a.protected) return;
+        if (set.includes(a.id)) Object.assign(a, { achieved: true, unlocked: Math.floor(Date.now() / 1000) });
+        if (clear.includes(a.id)) Object.assign(a, { achieved: false, unlocked: 0 });
+      });
+      return { appid, game: "", steamid: "76561198000000001", stored: 1, achievements: achDemo(appid) };
+    },
   };
+}
+
+const achStore = {};
+function achDemo(appid) {
+  const names = ["First steps", "Explorer", "Collector", "Night owl", "Speed run", "Secret room", "Champion"];
+  return (achStore[appid] ||= names.slice(0, appid === 900001 ? 6 : 4).map((name, i) => ({
+    id: `ACH_${i}`, name, desc: i === 5 ? "" : `Demo description of “${name}”.`, icon: "", iconGray: "",
+    hidden: i === 5, protected: i === 3, achieved: i < 2, unlocked: i < 2 ? 1700000000 + i * 86400 : 0, percent: [71.2, 44.9, 12.3, 3.4, 0.8, 1.9, 25][i],
+  })));
 }
 
 export const api = isDemo ? mockBackend() : realBackend();

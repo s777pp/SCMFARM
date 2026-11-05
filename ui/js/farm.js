@@ -55,6 +55,8 @@ export const stopBot = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Stop`));
 export const deleteBot = (bot) => quiet(asf("DELETE", `/Api/Bot/${bot}`));
 export const pauseFarming = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Pause`, { Permanent: true, ResumeInSeconds: 0 }));
 export const resumeFarming = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Resume`));
+// A short break that is not the user's "Pause" (the Achievements screen while Steam opens a game, ui/js/achievements.js).
+export const holdFarming = (bot) => quiet(asf("POST", `/Api/Bot/${bot}/Pause`, { Permanent: false, ResumeInSeconds: 0 }));
 export const command = (text) => asf("POST", "/Api/Command", { Command: text });
 export const farmNext = (bot, appId) => command(`fqadd ${bot} ${appId}`);
 export const skipGame = (bot, appId) => command(`fbadd ${bot} ${appId}`);

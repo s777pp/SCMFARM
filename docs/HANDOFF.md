@@ -86,6 +86,17 @@ Last updated 2026-11-03 (0.2.0). History of changes: `CHANGELOG.md`.
   "scanning" meanwhile. Live check by the owner: play a game for a while during farming, quit, and see farming come
   back within ~3 minutes (or within ~1 h 15 min if the games were set aside for an hour).
 
+## Achievements (0.3.0)
+- `src-tauri/src/achievements.rs`: binary KeyValues + schema reader (unit tests, plus a test that parses every schema
+  on this PC), the helper (`main.rs` dispatches `--achievements` before Tauri starts), commands `ach_steam`,
+  `ach_games`, `ach_load`, `ach_apply`. vtable slots are SAM's `ISteamClient018` / `ISteamUserStats013` /
+  `ISteamUser012`; x64 thiscall = the normal C ABI with `self` first.
+- `ui/js/achievements.js`: the screen; `app.js` mode "ach", title-bar button `#btnAch`; `farm.js` `holdFarming`.
+- Not verified live by Claude (it may not run the app against the owner's Steam): reading a real game, applying,
+  the global percentages callback (1110), the pause/resume around the helper. Owner test: open a game you own,
+  tick one locked achievement, apply, check the Steam profile; then untick and apply again.
+- Later: showcasemaker.com's achievement-letters tool can hand a list of appid + ids; `ach_apply` already takes lists.
+
 ## Gotchas
 - New shells may not have Rust on PATH: prepend `%USERPROFILE%\.cargo\bin`.
 - `zip` crate is pinned to 2.x on purpose (API used in `engine.rs`).

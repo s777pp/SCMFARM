@@ -14,4 +14,8 @@ licensed under the SIL Open Font License, Version 1.1 (see licenses/Montserrat-O
 It includes qrcode-generator, Copyright (c) 2009 Kazuhiko Arase, licensed under the MIT License
 (see licenses/qrcode-generator-MIT.txt).
 
+Its Achievements screen contains code ported from Steam Achievement Manager by Rick (gibbed),
+Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us), licensed under the zlib License
+(see licenses/SteamAchievementManager-zlib.txt). The port is altered from the original (C# to Rust).
+
 It is built with Tauri (https://tauri.app), licensed under Apache-2.0 / MIT.

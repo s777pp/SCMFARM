@@ -9,12 +9,14 @@ use tauri_plugin_autostart::ManagerExt;
 
 use crate::engine::Engine;
 
-const LICENSES: [(&str, &str); 5] = [
+const LICENSES: [(&str, &str); 6] = [
     ("SCMFARM-LICENSE.txt", include_str!("../../LICENSE")),
     ("NOTICE.txt", include_str!("../../NOTICE")),
     ("ArchiSteamFarm-LICENSE.txt", include_str!("../../licenses/ArchiSteamFarm-LICENSE.txt")),
     ("Montserrat-OFL.txt", include_str!("../../licenses/Montserrat-OFL.txt")),
     ("qrcode-generator-MIT.txt", include_str!("../../licenses/qrcode-generator-MIT.txt")),
+    // The achievements code is ported from Steam Achievement Manager (src/achievements.rs).
+    ("SteamAchievementManager-zlib.txt", include_str!("../../licenses/SteamAchievementManager-zlib.txt")),
 ];
 
 #[cfg(windows)]

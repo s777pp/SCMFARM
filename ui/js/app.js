@@ -1,7 +1,8 @@
 import { api, isDemo } from "./backend.js";
 import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
+import { mountAchievements } from "./achievements.js";
 import {
-  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, isWaking, kickFarming, nearSets, nextSlot,
+  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, kickFarming, nearSets, nextSlot,
   parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
 } from "./farm.js";
 
@@ -149,6 +150,8 @@ function renderChrome() {
     .join("");
   $("#demoBadge").hidden = !isDemo;
   $("#btnSettings").hidden = state.mode !== "dash";
+  $("#btnAch").hidden = state.mode !== "dash" && state.mode !== "ach";
+  $("#btnAch").textContent = t(state.mode === "ach" ? "app.toDash" : "ach.open");
   $("#aboutEngine").textContent = t("about.engine", { v: "ArchiSteamFarm 6.3.11.7" });
   renderEngineChip();
   renderAccounts(true);
@@ -266,7 +269,18 @@ async function logout(bot) {
 function render() {
   renderChrome();
   if (state.mode === "dash") renderDash();
+  else if (state.mode === "ach") renderAch();
   else renderWizard();
+}
+
+// ------------------------------------------------------------------ achievements (ui/js/achievements.js)
+function renderAch() {
+  mountAchievements({
+    view: $("#view"), t, esc, api, lang: getLang, settings: S, saveSettings, ask,
+    bots: () => state.bots,
+    hold: (bot) => holdFarming(bot),
+    release: async (bot) => { await resumeFarming(bot); pollOnce(); },
+  });
 }
 
 // ------------------------------------------------------------------ wizard
@@ -1012,6 +1026,10 @@ $("#btnSettings").addEventListener("click", () => {
   renderWizard();
 });
 $("#btnAbout").addEventListener("click", () => $("#about").showModal());
+$("#btnAch").addEventListener("click", () => {
+  state.mode = state.mode === "ach" ? "dash" : "ach";
+  render();
+});
 
 // ------------------------------------------------------------------ language menu
 const langBox = $("#lang");

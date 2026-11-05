@@ -3,6 +3,27 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.3.0 — 2026-11-05
+
+### Added
+- **Achievements screen** (button "Achievements" in the title bar), the way Steam Achievement Manager does it
+  (gibbed, zlib licence; code ported to Rust in `src-tauri/src/achievements.rs`, licence in `licenses/`, About →
+  Licences, NOTICE, README). Left: the games whose achievement list Steam already keeps on this PC
+  (`<Steam>/appcache/stats/UserGameStatsSchema_<appid>.bin`), a search and "open by appid". Right: the game's
+  achievements with icon, name, description, global %, unlock date; tick / untick and apply all at once; hidden ones
+  are marked, protected ones (set by the game's servers, `(permission & 3) != 0`) are locked. Filters all / locked /
+  unlocked, search, "tick all locked", undo.
+- How it talks to Steam: SCMFARM starts itself as a short-lived helper (`SCMFARM.exe --achievements <appid>
+  read|apply`, `SteamAppId` set) that loads `steamclient64.dll` from the user's Steam folder (nothing from Steamworks
+  is shipped), connects to the running Steam client, requests the user's stats, sets / clears / stores, prints one
+  JSON line and exits. `apply` takes lists of ids on stdin, ready for the site's achievement-letters tool later.
+- Steam sees that game as running while the helper works, which would kick ASF off its game, so the farming of the
+  SCMFARM account that is signed in to the Steam client (registry `ActiveProcess\ActiveUser` vs the bot's SteamID)
+  is paused for those seconds (non-permanent pause) and resumed after. If the Steam client has another account, a
+  note says so.
+- Before the first change: a warning in our own words (unlock times are public, some achievement-hunting groups do
+  not count such accounts, Valve does not ban for it, no promises). Texts in all 8 languages; demo mock with two games.
+
 ## 0.2.2 — 2026-11-05
 
 ### Fixed

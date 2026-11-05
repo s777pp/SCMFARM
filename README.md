@@ -39,7 +39,7 @@ Research notes on how we use ASF: [docs/RESEARCH.md](docs/RESEARCH.md).
 | `src-tauri/src/lib.rs` | Tray icon, close-to-tray, single instance, cleanup on exit |
 | `src-tauri/src/extras.rs` | Windows notifications, the user's own Telegram bot, the showcasemaker.com feed (sale dates, set prices) |
 | `src-tauri/src/updater.rs` | Signed self-update of the portable exe |
-| `licenses/` | ArchiSteamFarm licence (Apache-2.0), Montserrat font licence (OFL), qrcode-generator (MIT) — built into the exe (`src-tauri/src/system.rs`), About → Licences writes them out |
+| `licenses/` | ArchiSteamFarm licence (Apache-2.0), Montserrat font licence (OFL), qrcode-generator (MIT), Steam Achievement Manager (zlib) — built into the exe (`src-tauri/src/system.rs`), About → Licences writes them out |
 | `scripts/preview.mjs` | Serves `ui/` for a browser preview in demo mode |
 
 ## Build on Windows
@@ -145,6 +145,9 @@ both folders and the exe itself, then quits.
     deletes them.
   The "showcasemaker.com" button and the links in the app only open pages in the user's browser.
 * Windows notifications are local (switch "Notify me").
+* The Achievements screen talks only to the Steam client already running on the PC (through Steam's own
+  `steamclient64.dll` from the Steam folder; nothing from Steamworks is shipped) and reads Steam's own achievement
+  lists from `<Steam>/appcache/stats`. Icons come from Steam's image CDN. Nothing goes to showcasemaker.com.
 * ASF's optional remote features (joining its Steam group, public trade listing, self-update, bad-bot list)
   are switched off by the app.
 
@@ -156,7 +159,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 
 * Only `SCMFARM.exe` files built by the GitHub Actions workflow in this repository from a tagged commit are signed.
 * Every component is open source under an OSI-approved licence: SCMFARM (Apache-2.0), ArchiSteamFarm
-  (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1), qrcode-generator (MIT).
+  (Apache-2.0, downloaded unmodified at first run), Tauri (Apache-2.0/MIT), Montserrat (OFL-1.1), qrcode-generator (MIT),
+  code ported from Steam Achievement Manager (zlib).
   There are no proprietary parts and no commercial dual licensing.
 
 Team roles:
@@ -184,3 +188,6 @@ The privacy statement for signed releases is the [Privacy](#privacy) section abo
 * ArchiSteamFarm: Apache License 2.0 — `licenses/ArchiSteamFarm-LICENSE.txt`; the downloaded ASF folder also
   keeps its own `LICENSE.txt`. ASF has no NOTICE file. The About dialog credits ASF and links to its repository.
 * Montserrat: SIL Open Font License 1.1 — `licenses/Montserrat-OFL.txt`.
+* Steam Achievement Manager (gibbed): zlib licence — `licenses/SteamAchievementManager-zlib.txt`. The Achievements
+  screen's Steam code (`src-tauri/src/achievements.rs`) is a port of its interface layouts, schema reader and rules,
+  altered for Rust; it is marked so in that file.

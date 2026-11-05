@@ -1,6 +1,6 @@
 [package]
 name = "showcase-farm"
-version = "0.2.2"
+version = "0.3.0"
 description = "Steam trading card farming on your own PC, powered by ArchiSteamFarm"
 edition = "2021"
 rust-version = "1.77"

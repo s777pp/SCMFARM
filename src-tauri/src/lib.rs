@@ -1,3 +1,4 @@
+pub mod achievements;
 mod engine;
 mod extras;
 mod settings;
@@ -93,6 +94,10 @@ pub fn run() {
             extras::telegram_send,
             extras::feed_get,
             extras::card_set,
+            achievements::ach_steam,
+            achievements::ach_games,
+            achievements::ach_load,
+            achievements::ach_apply,
         ])
         .build(tauri::generate_context!())
         .expect("error while building SCMFARM");
