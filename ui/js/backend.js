@@ -73,6 +73,8 @@ function mockBackend() {
   const bots = new Map();
 
   function toFarm(m) {
+    // ?aside=1: new games still in their refund window are set aside while "skip refundable" is on (FarmingPreferences 16)
+    if (params.has("aside") && m.bot.BotConfig.FarmingPreferences & 16) return [];
     const queueOnly = m.bot.BotConfig.FarmingPreferences & 8; // FarmPriorityQueueOnly
     const left = m.games.filter((g) => g.CardsRemaining > 0 && !m.skipped.has(g.AppID) && (!queueOnly || m.queue.includes(g.AppID)));
     left.sort((a, b) => (m.queue.indexOf(b.AppID) >= 0) - (m.queue.indexOf(a.AppID) >= 0));
@@ -229,6 +231,12 @@ function mockBackend() {
       return ok();
     },
     async logTail() {
+      if (params.has("aside")) {
+        const at = "2026-11-26 18:13:57|ArchiSteamFarm-1|INFO|main|";
+        return [...log.slice(-40), `${at}OnLoggedOn() Успешный вход как 7656119/demo.`,
+          `${at}IsPlayableGame() Фарм 2001120 (Split Fiction) временно отключен, поскольку ASF не может сейчас запустить эту игру.`,
+          `${at}IsPlayableGame() Фарм 379430 (Kingdom Come: Deliverance) временно отключен, поскольку ASF не может сейчас запустить эту игру.`];
+      }
       return log.slice(-40);
     },
     async settingsGet() {

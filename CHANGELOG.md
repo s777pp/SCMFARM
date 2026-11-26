@@ -3,6 +3,18 @@
 Format: newest first. Versions follow `package.json` / `tauri.conf.json` / `Cargo.toml` (kept equal by
 `scripts/check-version.mjs`).
 
+## 0.3.1 — 2026-11-26
+
+### Fixed
+- **"Looking for games with drops…" forever although new games with cards were bought.** With "skip games that can still
+  be refunded" on (the default, ASF FarmingPreferences 16) ASF sets every new game in its refund window aside (under
+  2 hours played, 14 days since purchase), logs "IsPlayableGame() … cannot run it now", says "farming finished" and farms
+  nothing; the dashboard kept guessing "scanning". Now SCMFARM reads the bot's latest pass in the ASF log
+  (`setAside` in `ui/js/farm.js`, at most once a minute while nothing is farmed), shows the status "New games wait for
+  the refund window", names the games and offers "Farm them now": after a confirmation that they can then no longer be
+  refunded it turns the option off for this account and reloads the bot. Without the option on, the same block says
+  Steam does not let ASF run those games right now. 8 languages; demo `?aside=1`.
+
 ## 0.3.0 — 2026-11-05
 
 ### Added

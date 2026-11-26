@@ -144,7 +144,7 @@ export function nextSlot(level) {
 }
 
 // ------------------------------------------------------------------ status
-export function botStatus(b, { loggedOnSince, waking } = {}) {
+export function botStatus(b, { loggedOnSince, waking, aside } = {}) {
   if (!b) return "stopped";
   if (b.RequiredInput) return "input";
   if (!b.KeepRunning) return "stopped";
@@ -154,6 +154,9 @@ export function botStatus(b, { loggedOnSince, waking } = {}) {
   if (cf.Paused) return "paused";
   if (cf.CurrentGamesFarming?.length) return "farming";
   if (cf.GamesToFarm?.length) return "farming";
+  // Games with cards that ASF set aside in its last pass (new ones still refundable): setAside(). Read from the log,
+  // so it is more exact than the guesses below.
+  if (aside) return "aside";
   // Right after login ASF still reads the badge pages.
   if (loggedOnSince && Date.now() - loggedOnSince < 3 * 60 * 1000) return "scanning";
   if (waking) return "scanning"; // after the user played: SCMFARM is getting ASF going again (wakeStep)
@@ -197,12 +200,29 @@ export async function kickFarming(bot) {
 }
 
 // ------------------------------------------------------------------ log reasons
-async function logLines() {
+async function logLines(n = 80) {
   try {
-    return await api.logTail(80);
+    return await api.logTail(n);
   } catch {
     return [];
   }
+}
+
+/**
+ * Games ASF set aside in this bot's latest farming pass: [{appid, name}]. ASF logs "IsPlayableGame() … <appid> (<name>) …"
+ * (in its own language) when it cannot play a game right now, most often a newly bought game still in its refund window
+ * while "skip refundable games" is on (FarmingPreferences 16): it then farms nothing and says "farming finished".
+ */
+export async function setAside(bot) {
+  const lines = (await logLines(400)).filter((l) => l.includes(`|${bot}|`));
+  // only since the bot's last sign-in: older lines may be about games that have been farmed since
+  const from = Math.max(0, lines.findLastIndex((l) => l.includes("|OnLoggedOn()")));
+  const seen = new Map();
+  for (const l of lines.slice(from)) {
+    const m = l.match(/IsPlayableGame\(\)\D*?(\d{1,10}) \((.+?)\)/);
+    if (m && !seen.has(m[1])) seen.set(m[1], { appid: Number(m[1]), name: m[2] });
+  }
+  return [...seen.values()];
 }
 
 /** Remembers where the log ends so later reads only look at new lines. */

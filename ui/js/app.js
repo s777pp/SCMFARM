@@ -3,7 +3,7 @@ import { LANGS, applyI18n, detectLang, getLang, setLang, t } from "./i18n.js";
 import { mountAchievements, parseLetters } from "./achievements.js";
 import { createFree } from "./free.js";
 import {
-  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, kickFarming, nearSets, nextSlot,
+  FIRST_BOT, INPUT, SignIn, botConfig, botStatus, cardsByGame, deleteBot, farmNext, getBot, getBots, holdFarming, isWaking, setAside, kickFarming, nearSets, nextSlot,
   command, parseAppIds, pauseFarming, queueGames, resumeFarming, saveBot, sendInput, skipGame, spanMinutes, startBot, stopBot, wakeStep,
 } from "./farm.js";
 
@@ -26,6 +26,7 @@ const state = {
   draft: null, // the account the wizard is setting up or editing (saved to settings.accounts by "Start farming")
   bots: {}, // ASF bot name -> last bot object from ASF
   loggedOnSince: {}, // bot -> ms
+  aside: {}, // bot -> { at, list } games with cards ASF set aside (new, still refundable), farm.js setAside
   wake: {}, // bot -> wakeStep state (getting ASF farming again after the user played)
   seen: {}, // bot -> { status, input } from the previous poll, for notifications
   cards: {}, // bot -> { at, games, err } (inventory for the sets panel)
@@ -302,7 +303,7 @@ async function openTool(mode) {
 function renderHome() {
   const a = cur() || {};
   const b = botOf(a.bot);
-  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]) });
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]), aside: state.aside[a.bot]?.list?.length });
   $("#view").innerHTML = `
     <div class="home">
       <div class="home__who"><img class="avatar" src="${esc(avatarUrl(b?.AvatarHash ?? a.avatar))}" alt="">
@@ -719,7 +720,7 @@ function updateDash() {
   if (!$("#dHead")) return;
   const bot = cur()?.bot;
   const b = botOf(bot);
-  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]) });
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]), aside: state.aside[bot]?.list?.length });
   const cf = b?.CardsFarmer || {};
   const toFarm = cf.GamesToFarm || [];
   const current = cf.CurrentGamesFarming?.[0] || null;
@@ -730,7 +731,7 @@ function updateDash() {
     <div class="who-inline"><img class="avatar" src="${esc(avatarUrl(b?.AvatarHash ?? cur()?.avatar))}" alt="">
       <div><b>${esc(nameOf(bot))}</b><div class="status" data-s="${status}"><i></i>${esc(t(`dash.status_${status}`))}</div></div></div>
     ${others.length ? `<div class="tabs" role="tablist">${accountsList().map((a) => {
-      const st = botStatus(botOf(a.bot), { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]) });
+      const st = botStatus(botOf(a.bot), { loggedOnSince: state.loggedOnSince[a.bot], waking: isWaking(state.wake[a.bot]), aside: state.aside[a.bot]?.list?.length });
       return `<button type="button" role="tab" class="tab${a.bot === bot ? " is-on" : ""}" data-action="switch-account" data-bot="${esc(a.bot)}" aria-selected="${a.bot === bot}">
         <img src="${esc(avatarUrl(botOf(a.bot)?.AvatarHash ?? a.avatar))}" alt=""><span>${esc(nameOf(a.bot))}</span><i class="status__dot" data-s="${st}"></i></button>`;
     }).join("")}</div>` : ""}
@@ -762,11 +763,18 @@ function updateDash() {
   inputBox.dataset.need = needKey;
   inputBox.hidden = !need;
 
+  const aside = !current && state.aside[bot]?.list?.length ? state.aside[bot].list : null;
+  const refundable = accountOf(bot)?.skipRefundable !== false;
   $("#dNow").innerHTML = current
     ? `<img src="${capsule(current.AppID)}" alt="">
        <div><span class="label">${esc(t("dash.now"))}</span><h3>${esc(current.GameName)}</h3>
        <p>${esc(t("dash.cardsInGame", { n: current.CardsRemaining }))} · ${esc(t("dash.hours", { h: (+current.HoursPlayed || 0).toFixed(1) }))}</p></div>`
-    : `<div class="ph">♦</div><div><span class="label">${esc(t("dash.now"))}</span><p>${esc(t("dash.nothing"))}</p></div>`;
+    : aside
+      ? `<div class="ph">⏳</div><div class="aside"><span class="label">${esc(t("dash.now"))}</span>
+         <p>${esc(t(refundable ? "dash.asideRefund" : "dash.asideOther", { n: aside.length }))}</p>
+         <p class="aside__games">${aside.map((g) => esc(g.name)).join(" · ")}</p>
+         ${refundable ? `<button class="btn btn--sm btn--primary" data-action="farm-refundable">${esc(t("dash.asideFarm"))}</button>` : ""}</div>`
+      : `<div class="ph">♦</div><div><span class="label">${esc(t("dash.now"))}</span><p>${esc(t("dash.nothing"))}</p></div>`;
 
   const cards = toFarm.reduce((s, g) => s + (g.CardsRemaining || 0), 0);
   $("#dStats").innerHTML = `
@@ -919,7 +927,7 @@ function notifyText(title, body) {
 }
 
 function watchForNews(bot, b) {
-  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]) });
+  const status = botStatus(b, { loggedOnSince: state.loggedOnSince[bot], waking: isWaking(state.wake[bot]), aside: state.aside[bot]?.list?.length });
   const input = b?.RequiredInput || 0;
   const prev = state.seen[bot];
   // "farmed": this account farmed since SCMFARM started; right after the last card ASF shows "scanning" for a while.
@@ -946,6 +954,7 @@ async function pollOnce() {
     if (state.wake[a.bot].kick) kickFarming(a.bot).catch((e) => console.warn("wake", e));
     watchForNews(a.bot, b);
     rememberAccount(a.bot, b);
+    checkAside(a.bot, b);
   }
   if (state.mode === "home") renderHome();
   if (state.mode === "dash") {
@@ -954,6 +963,18 @@ async function pollOnce() {
   }
   renderAccounts();
 }
+/** Nothing to farm although games have cards left: ask the log which games ASF set aside (at most once a minute). */
+function checkAside(bot, b) {
+  const cf = b?.CardsFarmer || {};
+  const idle = b?.IsConnectedAndLoggedOn && b.IsPlayingPossible && !cf.Paused && !cf.CurrentGamesFarming?.length && !cf.GamesToFarm?.length
+    && Date.now() - (state.loggedOnSince[bot] || Date.now()) > 20000;
+  if (!idle) { state.aside[bot] = null; return; }
+  const was = state.aside[bot];
+  if (was && Date.now() - was.at < 60000) return;
+  state.aside[bot] = { at: Date.now(), list: was?.list || [] };
+  setAside(bot).then((list) => { state.aside[bot] = { at: Date.now(), list }; if (state.mode === "dash") updateDash(); }).catch(() => {});
+}
+
 function startPolling() {
   clearInterval(pollTimer);
   if (!accountsList().length) return;
@@ -1066,6 +1087,14 @@ document.addEventListener("click", async (e) => {
   } else if (a === "pause") { await pauseFarming(bot); pollOnce(); }
   else if (a === "resume") { await resumeFarming(bot); pollOnce(); }
   else if (a === "stop") { await stopBot(bot); pollOnce(); }
+  else if (a === "farm-refundable") {
+    // New games wait for their refund window to pass; farming them now adds hours, so they can no longer be refunded.
+    if (!(await ask(t("dash.asideAskTitle"), t("dash.asideAskText"), t("dash.asideAskYes")))) return;
+    await saveAccount(bot, { skipRefundable: false });
+    await saveBot(bot, botConfig(accountOf(bot)));   // ASF reloads the bot: a fresh pass without the refund check
+    state.aside[bot] = null;
+    pollOnce();
+  }
   else if (a === "start-bot") { await startBot(bot); pollOnce(); }
   else if (a === "farm-next") { await farmNext(bot, el.dataset.app).catch(console.warn); pollOnce(); }
   else if (a === "skip") {

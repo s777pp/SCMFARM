@@ -292,6 +292,11 @@ textarea.input{height:auto;min-height:110px;padding:12px 14px;font-family:var(--
 .status[data-s=paused] i,.status[data-s=playing] i,.status[data-s=input] i{background:var(--ui-warn)}
 .status[data-s=connecting] i,.status[data-s=scanning] i{background:var(--ui-cyan);animation:pulse 1.2s infinite}
 .status[data-s=done] i{background:var(--ui-cyan-hi)}
+.status[data-s=aside] i,.status__dot[data-s=aside]{background:var(--ui-warn)}
+/* games ASF set aside (app.js updateDash, farm.js setAside) */
+.aside p{margin:4px 0 0;color:var(--ui-muted);font-size:var(--ui-text-sm);line-height:1.5}
+.aside .aside__games{color:var(--ui-ink);font-weight:700}
+.aside .btn{margin-top:10px}
 
 .dash__grid{flex:1;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;min-height:0}
 .dash__side{display:grid;grid-template-rows:auto minmax(0,1fr);gap:16px;min-height:0}
